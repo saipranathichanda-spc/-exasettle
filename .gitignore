@@ -1,0 +1,32 @@
+# Environment and secrets
+.env
+.env.*
+*.env
+!*.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ExaSettle generated runtime runs (datasets / exports stored in reports/)
+# keep directory structure but ignore large runs if any
+logs/*.log
+uploads/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

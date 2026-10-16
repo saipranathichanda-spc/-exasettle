@@ -1,0 +1,1018 @@
+{
+  "report_metadata": {
+    "title": "ExaSettle Settlement Reconciliation Run Report",
+    "competition": "ExaThon India 2026 - Track 01: Money, Risk & Regulation",
+    "run_id": "e2e_verified_demo_pack",
+    "scenario_id": "SCN_CORE_8PACK",
+    "seed": 42,
+    "dataset_hash": "27a14b7a703b5073723607dcded0bfdc5d3ed8b61d20800b3f6ed5038eda0ecd",
+    "synthetic_disclosure": "All data generated synthetically for hackathon demonstration. No real money or citizens.",
+    "simulation_disclosure": "AI-simulated scenario \u2014 not real customer feedback"
+  },
+  "engine_execution": {
+    "engine": "LOCAL_SQLITE_ENGINE_v3.50.4",
+    "engine_mode": "LOCAL_FALLBACK",
+    "is_fallback": true,
+    "sql_query_type": "CTE_WINDOW_FULL_OUTER_JOIN",
+    "timings_ms": {
+      "prep_time_ms": 0.009,
+      "load_time_ms": 0.465,
+      "query_time_ms": 0.674,
+      "total_time_ms": 1.366
+    },
+    "counts": {
+      "gateway_rows": 8,
+      "bank_rows": 7,
+      "reconciled_results": 9
+    }
+  },
+  "reconciliation_summary": {
+    "total_transactions": 9,
+    "clean_matches": 1,
+    "total_exceptions": 8,
+    "total_amount_at_issue": "\u20b92,565.00",
+    "amount_at_issue_paise": 256500,
+    "classification_breakdown": {
+      "MATCHED": 1,
+      "FEE_VARIANCE_MDR": 1,
+      "AMOUNT_MISMATCH": 1,
+      "MISSING_IN_BANK": 1,
+      "MISSING_IN_GATEWAY": 1,
+      "DUPLICATE": 2,
+      "SETTLEMENT_DELAY": 1,
+      "AMBIGUOUS_REVIEW": 1
+    },
+    "ground_truth_accuracy": {
+      "evaluated_known_cases": 9,
+      "correctly_classified": 9,
+      "accuracy_percent": 100.0
+    }
+  },
+  "results": [
+    {
+      "run_id": "e2e_verified_demo_pack",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_101",
+      "classification": "MATCHED",
+      "match_method": "CTE_ROW_NUMBER_FULL_OUTER_JOIN",
+      "ambiguity_flag": false,
+      "gateway_record_id": "GW_REC_101",
+      "bank_record_id": "BK_REC_101",
+      "gateway_amount_paise": 150000,
+      "bank_amount_paise": 150000,
+      "difference_paise": 0,
+      "applied_rule": "RULE_CLEAN_MATCH: All identifiers, principal amount, fee schedule, and settlement time windows verified.",
+      "priority_score": 0,
+      "priority_explanation": "Priority 0/100: Transaction cleanly matched. Zero discrepancies detected.",
+      "evidence_json": {
+        "source_records": {
+          "gateway_record_id": "GW_REC_101",
+          "bank_record_id": "BK_REC_101"
+        },
+        "financial_values": {
+          "gateway_amount_paise": 150000,
+          "bank_amount_paise": 150000,
+          "difference_paise": 0,
+          "gateway_fee_paise": 3000,
+          "bank_fee_paise": 3000
+        },
+        "timing": {
+          "gateway_timestamp": "2026-10-16T10:05:00+00:00",
+          "bank_timestamp": "2026-10-16T10:15:00+00:00",
+          "elapsed_settlement_hours": 0.17,
+          "threshold_hours": 24.0
+        },
+        "state": {
+          "gateway_status": "SUCCESS",
+          "bank_status": "SETTLED",
+          "reversal_status": null
+        },
+        "priority_breakdown": {
+          "base_points": 0,
+          "discrepancy_points": 0,
+          "delay_points": 0,
+          "risk_factors": []
+        }
+      },
+      "ground_truth_label": "MATCHED",
+      "validation_status": "VALIDATED_CORRECT"
+    },
+    {
+      "run_id": "e2e_verified_demo_pack",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_102",
+      "classification": "FEE_VARIANCE_MDR",
+      "match_method": "CTE_ROW_NUMBER_FULL_OUTER_JOIN",
+      "ambiguity_flag": false,
+      "gateway_record_id": "GW_REC_102",
+      "bank_record_id": "BK_REC_102",
+      "gateway_amount_paise": 200000,
+      "bank_amount_paise": 200000,
+      "difference_paise": 1500,
+      "applied_rule": "RULE_FEE_VARIANCE: Gateway fee schedule (\u20b940.00) differs from Bank deducted fee (\u20b955.00) by \u20b915.00.",
+      "priority_score": 15,
+      "priority_explanation": "Operational Triage Score 15/100: Merchant discount rate / fee schedule variance (+15 pts)",
+      "evidence_json": {
+        "source_records": {
+          "gateway_record_id": "GW_REC_102",
+          "bank_record_id": "BK_REC_102"
+        },
+        "financial_values": {
+          "gateway_amount_paise": 200000,
+          "bank_amount_paise": 200000,
+          "difference_paise": 1500,
+          "gateway_fee_paise": 4000,
+          "bank_fee_paise": 5500
+        },
+        "timing": {
+          "gateway_timestamp": "2026-10-16T10:20:00+00:00",
+          "bank_timestamp": "2026-10-16T10:25:00+00:00",
+          "elapsed_settlement_hours": 0.08,
+          "threshold_hours": 24.0
+        },
+        "state": {
+          "gateway_status": "SUCCESS",
+          "bank_status": "SETTLED",
+          "reversal_status": null
+        },
+        "priority_breakdown": {
+          "components": [
+            {
+              "factor": "Fee Variance",
+              "points": 15
+            }
+          ]
+        }
+      },
+      "ground_truth_label": "FEE_VARIANCE_MDR",
+      "validation_status": "VALIDATED_CORRECT"
+    },
+    {
+      "run_id": "e2e_verified_demo_pack",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_103",
+      "classification": "AMOUNT_MISMATCH",
+      "match_method": "CTE_ROW_NUMBER_FULL_OUTER_JOIN",
+      "ambiguity_flag": false,
+      "gateway_record_id": "GW_REC_103",
+      "bank_record_id": "BK_REC_103",
+      "gateway_amount_paise": 350000,
+      "bank_amount_paise": 300000,
+      "difference_paise": 50000,
+      "applied_rule": "RULE_AMOUNT_MISMATCH: Gateway principal amount (\u20b93500.00) does not match Bank settled amount (\u20b93000.00).",
+      "priority_score": 40,
+      "priority_explanation": "Operational Triage Score 40/100: Principal amount mismatch of \u20b9500.00 (+40 pts)",
+      "evidence_json": {
+        "source_records": {
+          "gateway_record_id": "GW_REC_103",
+          "bank_record_id": "BK_REC_103"
+        },
+        "financial_values": {
+          "gateway_amount_paise": 350000,
+          "bank_amount_paise": 300000,
+          "difference_paise": 50000,
+          "gateway_fee_paise": 7000,
+          "bank_fee_paise": 7000
+        },
+        "timing": {
+          "gateway_timestamp": "2026-10-16T10:35:00+00:00",
+          "bank_timestamp": "2026-10-16T10:40:00+00:00",
+          "elapsed_settlement_hours": 0.08,
+          "threshold_hours": 24.0
+        },
+        "state": {
+          "gateway_status": "SUCCESS",
+          "bank_status": "SETTLED",
+          "reversal_status": null
+        },
+        "priority_breakdown": {
+          "components": [
+            {
+              "factor": "Amount Mismatch",
+              "points": 40,
+              "difference_rupees": 500.0
+            }
+          ]
+        }
+      },
+      "ground_truth_label": "AMOUNT_MISMATCH",
+      "validation_status": "VALIDATED_CORRECT"
+    },
+    {
+      "run_id": "e2e_verified_demo_pack",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_104",
+      "classification": "MISSING_IN_BANK",
+      "match_method": "CTE_ROW_NUMBER_FULL_OUTER_JOIN",
+      "ambiguity_flag": false,
+      "gateway_record_id": "GW_REC_104",
+      "bank_record_id": null,
+      "gateway_amount_paise": 120000,
+      "bank_amount_paise": null,
+      "difference_paise": 120000,
+      "applied_rule": "RULE_MISSING_BANK: Gateway captured payment but no corresponding bank settlement record found.",
+      "priority_score": 95,
+      "priority_explanation": "Operational Triage Score 95/100: Missing ledger leg: Bank settlement missing completely (+45 pts); Principal amount mismatch of \u20b91200.00 (+50 pts)",
+      "evidence_json": {
+        "source_records": {
+          "gateway_record_id": "GW_REC_104",
+          "bank_record_id": null
+        },
+        "financial_values": {
+          "gateway_amount_paise": 120000,
+          "bank_amount_paise": null,
+          "difference_paise": 120000,
+          "gateway_fee_paise": 2400,
+          "bank_fee_paise": null
+        },
+        "timing": {
+          "gateway_timestamp": "2026-10-16T10:50:00+00:00",
+          "bank_timestamp": null,
+          "elapsed_settlement_hours": 0.0,
+          "threshold_hours": 24.0
+        },
+        "state": {
+          "gateway_status": "SUCCESS",
+          "bank_status": null,
+          "reversal_status": null
+        },
+        "priority_breakdown": {
+          "components": [
+            {
+              "factor": "Missing Ledger Leg",
+              "points": 45
+            },
+            {
+              "factor": "Amount Mismatch",
+              "points": 50,
+              "difference_rupees": 1200.0
+            }
+          ]
+        }
+      },
+      "ground_truth_label": "MISSING_IN_BANK",
+      "validation_status": "VALIDATED_CORRECT"
+    },
+    {
+      "run_id": "e2e_verified_demo_pack",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_105",
+      "classification": "MISSING_IN_GATEWAY",
+      "match_method": "CTE_ROW_NUMBER_FULL_OUTER_JOIN",
+      "ambiguity_flag": false,
+      "gateway_record_id": null,
+      "bank_record_id": "BK_REC_105",
+      "gateway_amount_paise": null,
+      "bank_amount_paise": 85000,
+      "difference_paise": 85000,
+      "applied_rule": "RULE_MISSING_GATEWAY: Bank settlement record exists without originating gateway capture record.",
+      "priority_score": 92,
+      "priority_explanation": "Operational Triage Score 92/100: Missing ledger leg: Gateway capture missing completely (+45 pts); Principal amount mismatch of \u20b9850.00 (+47 pts)",
+      "evidence_json": {
+        "source_records": {
+          "gateway_record_id": null,
+          "bank_record_id": "BK_REC_105"
+        },
+        "financial_values": {
+          "gateway_amount_paise": null,
+          "bank_amount_paise": 85000,
+          "difference_paise": 85000,
+          "gateway_fee_paise": null,
+          "bank_fee_paise": 1700
+        },
+        "timing": {
+          "gateway_timestamp": null,
+          "bank_timestamp": "2026-10-16T11:10:00+00:00",
+          "elapsed_settlement_hours": 0.0,
+          "threshold_hours": 24.0
+        },
+        "state": {
+          "gateway_status": null,
+          "bank_status": "SETTLED",
+          "reversal_status": null
+        },
+        "priority_breakdown": {
+          "components": [
+            {
+              "factor": "Missing Ledger Leg",
+              "points": 45
+            },
+            {
+              "factor": "Amount Mismatch",
+              "points": 47,
+              "difference_rupees": 850.0
+            }
+          ]
+        }
+      },
+      "ground_truth_label": "MISSING_IN_GATEWAY",
+      "validation_status": "VALIDATED_CORRECT"
+    },
+    {
+      "run_id": "e2e_verified_demo_pack",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_106",
+      "classification": "DUPLICATE",
+      "match_method": "CTE_ROW_NUMBER_FULL_OUTER_JOIN",
+      "ambiguity_flag": true,
+      "gateway_record_id": "GW_REC_106_A",
+      "bank_record_id": "BK_REC_106",
+      "gateway_amount_paise": 450000,
+      "bank_amount_paise": 450000,
+      "difference_paise": 0,
+      "applied_rule": "RULE_DUPLICATE_CHECK: Duplicate submissions detected (Gateway copies: 2, Bank copies: 1, Row index: 1).",
+      "priority_score": 40,
+      "priority_explanation": "Operational Triage Score 40/100: Duplicate submission detected in transaction records (+40 pts)",
+      "evidence_json": {
+        "source_records": {
+          "gateway_record_id": "GW_REC_106_A",
+          "bank_record_id": "BK_REC_106"
+        },
+        "financial_values": {
+          "gateway_amount_paise": 450000,
+          "bank_amount_paise": 450000,
+          "difference_paise": 0,
+          "gateway_fee_paise": 9000,
+          "bank_fee_paise": 9000
+        },
+        "timing": {
+          "gateway_timestamp": "2026-10-16T11:30:00+00:00",
+          "bank_timestamp": "2026-10-16T11:40:00+00:00",
+          "elapsed_settlement_hours": 0.17,
+          "threshold_hours": 24.0
+        },
+        "state": {
+          "gateway_status": "SUCCESS",
+          "bank_status": "SETTLED",
+          "reversal_status": null
+        },
+        "priority_breakdown": {
+          "components": [
+            {
+              "factor": "Duplicate Submission",
+              "points": 40
+            }
+          ]
+        }
+      },
+      "ground_truth_label": "DUPLICATE",
+      "validation_status": "VALIDATED_CORRECT"
+    },
+    {
+      "run_id": "e2e_verified_demo_pack",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_106",
+      "classification": "DUPLICATE",
+      "match_method": "CTE_ROW_NUMBER_FULL_OUTER_JOIN",
+      "ambiguity_flag": true,
+      "gateway_record_id": "GW_REC_106_B",
+      "bank_record_id": null,
+      "gateway_amount_paise": 450000,
+      "bank_amount_paise": null,
+      "difference_paise": 0,
+      "applied_rule": "RULE_DUPLICATE_CHECK: Duplicate submissions detected (Gateway copies: 2, Bank copies: 0, Row index: 2).",
+      "priority_score": 40,
+      "priority_explanation": "Operational Triage Score 40/100: Duplicate submission detected in transaction records (+40 pts)",
+      "evidence_json": {
+        "source_records": {
+          "gateway_record_id": "GW_REC_106_B",
+          "bank_record_id": null
+        },
+        "financial_values": {
+          "gateway_amount_paise": 450000,
+          "bank_amount_paise": null,
+          "difference_paise": 0,
+          "gateway_fee_paise": 9000,
+          "bank_fee_paise": null
+        },
+        "timing": {
+          "gateway_timestamp": "2026-10-16T11:31:00+00:00",
+          "bank_timestamp": null,
+          "elapsed_settlement_hours": 0.0,
+          "threshold_hours": 24.0
+        },
+        "state": {
+          "gateway_status": "SUCCESS",
+          "bank_status": null,
+          "reversal_status": null
+        },
+        "priority_breakdown": {
+          "components": [
+            {
+              "factor": "Duplicate Submission",
+              "points": 40
+            }
+          ]
+        }
+      },
+      "ground_truth_label": "DUPLICATE",
+      "validation_status": "VALIDATED_CORRECT"
+    },
+    {
+      "run_id": "e2e_verified_demo_pack",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_107",
+      "classification": "SETTLEMENT_DELAY",
+      "match_method": "CTE_ROW_NUMBER_FULL_OUTER_JOIN",
+      "ambiguity_flag": false,
+      "gateway_record_id": "GW_REC_107",
+      "bank_record_id": "BK_REC_107",
+      "gateway_amount_paise": 500000,
+      "bank_amount_paise": 500000,
+      "difference_paise": 0,
+      "applied_rule": "RULE_SETTLEMENT_DELAY: Settlement elapsed time (72.0h) exceeds configured scenario threshold (24.0h).",
+      "priority_score": 37,
+      "priority_explanation": "Operational Triage Score 37/100: Settlement delayed by 72.0h (threshold: 24.0h) (+37 pts)",
+      "evidence_json": {
+        "source_records": {
+          "gateway_record_id": "GW_REC_107",
+          "bank_record_id": "BK_REC_107"
+        },
+        "financial_values": {
+          "gateway_amount_paise": 500000,
+          "bank_amount_paise": 500000,
+          "difference_paise": 0,
+          "gateway_fee_paise": 10000,
+          "bank_fee_paise": 10000
+        },
+        "timing": {
+          "gateway_timestamp": "2026-10-16T12:00:00+00:00",
+          "bank_timestamp": "2026-10-19T12:00:00+00:00",
+          "elapsed_settlement_hours": 72.0,
+          "threshold_hours": 24.0
+        },
+        "state": {
+          "gateway_status": "SUCCESS",
+          "bank_status": "SETTLED",
+          "reversal_status": null
+        },
+        "priority_breakdown": {
+          "components": [
+            {
+              "factor": "Settlement Delay",
+              "points": 37,
+              "settlement_delay_hours": 72.0
+            }
+          ]
+        }
+      },
+      "ground_truth_label": "SETTLEMENT_DELAY",
+      "validation_status": "VALIDATED_CORRECT"
+    },
+    {
+      "run_id": "e2e_verified_demo_pack",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_108",
+      "classification": "AMBIGUOUS_REVIEW",
+      "match_method": "CTE_ROW_NUMBER_FULL_OUTER_JOIN",
+      "ambiguity_flag": true,
+      "gateway_record_id": "GW_REC_108",
+      "bank_record_id": "BK_REC_108",
+      "gateway_amount_paise": 220000,
+      "bank_amount_paise": 220000,
+      "difference_paise": 0,
+      "applied_rule": "RULE_STATUS_CONFLICT: Gateway status 'REVERSED' (Reversal: REVERSED_CUSTOMER_REQUEST) conflicts with Bank status 'SETTLED'.",
+      "priority_score": 35,
+      "priority_explanation": "Operational Triage Score 35/100: Conflicting or reversed transaction state requiring manual investigation (+35 pts)",
+      "evidence_json": {
+        "source_records": {
+          "gateway_record_id": "GW_REC_108",
+          "bank_record_id": "BK_REC_108"
+        },
+        "financial_values": {
+          "gateway_amount_paise": 220000,
+          "bank_amount_paise": 220000,
+          "difference_paise": 0,
+          "gateway_fee_paise": 4400,
+          "bank_fee_paise": 4400
+        },
+        "timing": {
+          "gateway_timestamp": "2026-10-16T13:00:00+00:00",
+          "bank_timestamp": "2026-10-16T13:10:00+00:00",
+          "elapsed_settlement_hours": 0.17,
+          "threshold_hours": 24.0
+        },
+        "state": {
+          "gateway_status": "REVERSED",
+          "bank_status": "SETTLED",
+          "reversal_status": "REVERSED_CUSTOMER_REQUEST"
+        },
+        "priority_breakdown": {
+          "components": [
+            {
+              "factor": "Status Conflict",
+              "points": 35
+            }
+          ]
+        }
+      },
+      "ground_truth_label": "AMBIGUOUS_REVIEW",
+      "validation_status": "VALIDATED_CORRECT"
+    }
+  ],
+  "simulation_events": [
+    {
+      "simulation_run_id": "sim_e2e_verified_demo_pack_TXN_SYN_101",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_101",
+      "agent_role": "CUSTOMER",
+      "agent_id": "SIM_CUST_101",
+      "persona_name": "Aarav Sharma (Fictional Persona)",
+      "event_type": "PURCHASE_SATISFACTION",
+      "event_timestamp": "2026-10-16T12:00:00Z",
+      "observation": "My order status shows confirmed and \u20b91,500.00 was debited smoothly via UPI.",
+      "question_or_feedback": "Payment went through quickly; invoice and receipt match.",
+      "evidence_reference": "RECON_EVIDENCE_FOR_TXN_SYN_101",
+      "simulation_label": "AI-simulated scenario \u2014 not real customer feedback",
+      "model_name": "qwen-plus/gpt-4o-mini (simulated)",
+      "repository_revision": "7657031ac01184afe2cb220f5ee3545573b5e843",
+      "status": "PRERECORDED"
+    },
+    {
+      "simulation_run_id": "sim_e2e_verified_demo_pack_TXN_SYN_101",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_101",
+      "agent_role": "MERCHANT",
+      "agent_id": "SIM_MERCH_001",
+      "persona_name": "Kirana Express (Fictional Merchant)",
+      "event_type": "SETTLEMENT_ACCEPTED",
+      "event_timestamp": "2026-10-16T12:00:00Z",
+      "observation": "Settlement of \u20b91,500.00 less standard 2% MDR (\u20b930.00) received in settlement account within normal 15 minutes.",
+      "question_or_feedback": "Clean match, batch settled automatically.",
+      "evidence_reference": "RECON_EVIDENCE_FOR_TXN_SYN_101",
+      "simulation_label": "AI-simulated scenario \u2014 not real customer feedback",
+      "model_name": "qwen-plus/gpt-4o-mini (simulated)",
+      "repository_revision": "7657031ac01184afe2cb220f5ee3545573b5e843",
+      "status": "PRERECORDED"
+    },
+    {
+      "simulation_run_id": "sim_e2e_verified_demo_pack_TXN_SYN_101",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_101",
+      "agent_role": "GATEWAY",
+      "agent_id": "SYS_GATEWAY_NODE",
+      "persona_name": "Synthetic Gateway Orchestrator (System Actor)",
+      "event_type": "TELEMETRY_CLOSED",
+      "event_timestamp": "2026-10-16T12:00:00Z",
+      "observation": "PG_REF_101 received 200 OK from acquiring bank. UTR_101 generated and webhook emitted.",
+      "question_or_feedback": "Standard happy-path transaction lifecycle closed.",
+      "evidence_reference": "RECON_EVIDENCE_FOR_TXN_SYN_101",
+      "simulation_label": "AI-simulated scenario \u2014 not real customer feedback",
+      "model_name": "qwen-plus/gpt-4o-mini (simulated)",
+      "repository_revision": "7657031ac01184afe2cb220f5ee3545573b5e843",
+      "status": "PRERECORDED"
+    },
+    {
+      "simulation_run_id": "sim_e2e_verified_demo_pack_TXN_SYN_102",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_102",
+      "agent_role": "CUSTOMER",
+      "agent_id": "SIM_CUST_102",
+      "persona_name": "Priya Patel (Fictional Persona)",
+      "event_type": "CUSTOMER_CONFIRMATION",
+      "event_timestamp": "2026-10-16T12:00:00Z",
+      "observation": "My account was billed \u20b92,000.00 as expected on the checkout page.",
+      "question_or_feedback": "Transaction shows successful in my bank app.",
+      "evidence_reference": "RECON_EVIDENCE_FOR_TXN_SYN_102",
+      "simulation_label": "AI-simulated scenario \u2014 not real customer feedback",
+      "model_name": "qwen-plus/gpt-4o-mini (simulated)",
+      "repository_revision": "7657031ac01184afe2cb220f5ee3545573b5e843",
+      "status": "PRERECORDED"
+    },
+    {
+      "simulation_run_id": "sim_e2e_verified_demo_pack_TXN_SYN_102",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_102",
+      "agent_role": "MERCHANT",
+      "agent_id": "SIM_MERCH_002",
+      "persona_name": "Bharat Retailers (Fictional Merchant)",
+      "event_type": "FEE_SCHEDULE_QUERY",
+      "event_timestamp": "2026-10-16T12:00:00Z",
+      "observation": "Expected fee was \u20b940.00 per contracted 2% rate, but bank statement reflects \u20b955.00 deduction (\u20b915.00 variance).",
+      "question_or_feedback": "Why was a higher MDR tier applied to this debit card transaction?",
+      "evidence_reference": "RECON_EVIDENCE_FOR_TXN_SYN_102",
+      "simulation_label": "AI-simulated scenario \u2014 not real customer feedback",
+      "model_name": "qwen-plus/gpt-4o-mini (simulated)",
+      "repository_revision": "7657031ac01184afe2cb220f5ee3545573b5e843",
+      "status": "PRERECORDED"
+    },
+    {
+      "simulation_run_id": "sim_e2e_verified_demo_pack_TXN_SYN_102",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_102",
+      "agent_role": "GATEWAY",
+      "agent_id": "SYS_GATEWAY_NODE",
+      "persona_name": "Synthetic Gateway Orchestrator (System Actor)",
+      "event_type": "FEE_DISCREPANCY_FLAG",
+      "event_timestamp": "2026-10-16T12:00:00Z",
+      "observation": "Gateway fee engine calculated fee=4000 paise. Bank clearing file returned fee=5500 paise.",
+      "question_or_feedback": "Flagged MDR rate card mismatch with acquiring bank feed.",
+      "evidence_reference": "RECON_EVIDENCE_FOR_TXN_SYN_102",
+      "simulation_label": "AI-simulated scenario \u2014 not real customer feedback",
+      "model_name": "qwen-plus/gpt-4o-mini (simulated)",
+      "repository_revision": "7657031ac01184afe2cb220f5ee3545573b5e843",
+      "status": "PRERECORDED"
+    },
+    {
+      "simulation_run_id": "sim_e2e_verified_demo_pack_TXN_SYN_103",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_103",
+      "agent_role": "CUSTOMER",
+      "agent_id": "SIM_CUST_103",
+      "persona_name": "Rohan Gupta (Fictional Persona)",
+      "event_type": "AMOUNT_CONFUSION",
+      "event_timestamp": "2026-10-16T12:00:00Z",
+      "observation": "I initiated a purchase for \u20b93,500.00 on the retailer site.",
+      "question_or_feedback": "Was my card charged \u20b93,500.00 or \u20b93,000.00?",
+      "evidence_reference": "RECON_EVIDENCE_FOR_TXN_SYN_103",
+      "simulation_label": "AI-simulated scenario \u2014 not real customer feedback",
+      "model_name": "qwen-plus/gpt-4o-mini (simulated)",
+      "repository_revision": "7657031ac01184afe2cb220f5ee3545573b5e843",
+      "status": "PRERECORDED"
+    },
+    {
+      "simulation_run_id": "sim_e2e_verified_demo_pack_TXN_SYN_103",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_103",
+      "agent_role": "MERCHANT",
+      "agent_id": "SIM_MERCH_003",
+      "persona_name": "Deccan Electronics (Fictional Merchant)",
+      "event_type": "MERCHANT_HOLDOFF",
+      "event_timestamp": "2026-10-16T12:00:00Z",
+      "observation": "Cart total was \u20b93,500.00 but our bank settlement credit is only \u20b93,000.00. We have a \u20b9500.00 deficit.",
+      "question_or_feedback": "Holding order shipment until the \u20b9500.00 principal variance is reconciled.",
+      "evidence_reference": "RECON_EVIDENCE_FOR_TXN_SYN_103",
+      "simulation_label": "AI-simulated scenario \u2014 not real customer feedback",
+      "model_name": "qwen-plus/gpt-4o-mini (simulated)",
+      "repository_revision": "7657031ac01184afe2cb220f5ee3545573b5e843",
+      "status": "PRERECORDED"
+    },
+    {
+      "simulation_run_id": "sim_e2e_verified_demo_pack_TXN_SYN_103",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_103",
+      "agent_role": "GATEWAY",
+      "agent_id": "SYS_GATEWAY_NODE",
+      "persona_name": "Synthetic Gateway Orchestrator (System Actor)",
+      "event_type": "SYSTEM_MISMATCH_ALARM",
+      "event_timestamp": "2026-10-16T12:00:00Z",
+      "observation": "Gateway capture authorized at 350000 paise. Bank clearing file reported 300000 paise settled.",
+      "question_or_feedback": "Amount delta = 50000 paise. Triggering high-priority settlement investigation.",
+      "evidence_reference": "RECON_EVIDENCE_FOR_TXN_SYN_103",
+      "simulation_label": "AI-simulated scenario \u2014 not real customer feedback",
+      "model_name": "qwen-plus/gpt-4o-mini (simulated)",
+      "repository_revision": "7657031ac01184afe2cb220f5ee3545573b5e843",
+      "status": "PRERECORDED"
+    },
+    {
+      "simulation_run_id": "sim_e2e_verified_demo_pack_TXN_SYN_104",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_104",
+      "agent_role": "CUSTOMER",
+      "agent_id": "SIM_CUST_104",
+      "persona_name": "Ananya Iyer (Fictional Persona)",
+      "event_type": "CUSTOMER_ENQUIRY",
+      "event_timestamp": "2026-10-16T12:00:00Z",
+      "observation": "Gateway screen indicated payment successful, but I have not received order confirmation.",
+      "question_or_feedback": "Can you verify if money actually reached the seller?",
+      "evidence_reference": "RECON_EVIDENCE_FOR_TXN_SYN_104",
+      "simulation_label": "AI-simulated scenario \u2014 not real customer feedback",
+      "model_name": "qwen-plus/gpt-4o-mini (simulated)",
+      "repository_revision": "7657031ac01184afe2cb220f5ee3545573b5e843",
+      "status": "PRERECORDED"
+    },
+    {
+      "simulation_run_id": "sim_e2e_verified_demo_pack_TXN_SYN_104",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_104",
+      "agent_role": "MERCHANT",
+      "agent_id": "SIM_MERCH_004",
+      "persona_name": "Himalayan Goods (Fictional Merchant)",
+      "event_type": "PAYOUT_MISSING_ALARM",
+      "event_timestamp": "2026-10-16T12:00:00Z",
+      "observation": "Gateway reports customer completed payment for \u20b91,200.00, but no settlement row appears in bank ledger.",
+      "question_or_feedback": "Where is the payout for TXN_SYN_104? Bank has not credited our account.",
+      "evidence_reference": "RECON_EVIDENCE_FOR_TXN_SYN_104",
+      "simulation_label": "AI-simulated scenario \u2014 not real customer feedback",
+      "model_name": "qwen-plus/gpt-4o-mini (simulated)",
+      "repository_revision": "7657031ac01184afe2cb220f5ee3545573b5e843",
+      "status": "PRERECORDED"
+    },
+    {
+      "simulation_run_id": "sim_e2e_verified_demo_pack_TXN_SYN_104",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_104",
+      "agent_role": "GATEWAY",
+      "agent_id": "SYS_GATEWAY_NODE",
+      "persona_name": "Synthetic Gateway Orchestrator (System Actor)",
+      "event_type": "UNSETTLED_AUDIT_LOG",
+      "event_timestamp": "2026-10-16T12:00:00Z",
+      "observation": "GW_REC_104 committed in database as SUCCESS. Bank settlement file contains zero entries with UTR_104.",
+      "question_or_feedback": "Record is un-settled at bank side. Payout pending bank settlement cycle.",
+      "evidence_reference": "RECON_EVIDENCE_FOR_TXN_SYN_104",
+      "simulation_label": "AI-simulated scenario \u2014 not real customer feedback",
+      "model_name": "qwen-plus/gpt-4o-mini (simulated)",
+      "repository_revision": "7657031ac01184afe2cb220f5ee3545573b5e843",
+      "status": "PRERECORDED"
+    },
+    {
+      "simulation_run_id": "sim_e2e_verified_demo_pack_TXN_SYN_105",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_105",
+      "agent_role": "CUSTOMER",
+      "agent_id": "SIM_CUST_105",
+      "persona_name": "Vikram Verma (Fictional Persona)",
+      "event_type": "UNRECOGNIZED_CHARGE",
+      "event_timestamp": "2026-10-16T12:00:00Z",
+      "observation": "I see a direct bank transfer of \u20b9850.00 on my statement but no checkout screen session.",
+      "question_or_feedback": "Is this an automated recurring charge or direct transfer?",
+      "evidence_reference": "RECON_EVIDENCE_FOR_TXN_SYN_105",
+      "simulation_label": "AI-simulated scenario \u2014 not real customer feedback",
+      "model_name": "qwen-plus/gpt-4o-mini (simulated)",
+      "repository_revision": "7657031ac01184afe2cb220f5ee3545573b5e843",
+      "status": "PRERECORDED"
+    },
+    {
+      "simulation_run_id": "sim_e2e_verified_demo_pack_TXN_SYN_105",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_105",
+      "agent_role": "MERCHANT",
+      "agent_id": "SIM_MERCH_001",
+      "persona_name": "Kirana Express (Fictional Merchant)",
+      "event_type": "UNLINKED_DEPOSIT",
+      "event_timestamp": "2026-10-16T12:00:00Z",
+      "observation": "Our bank account shows an unexpected credit of \u20b9850.00 with reference UTR_105 not tied to an order ID.",
+      "question_or_feedback": "Need to match this orphaned deposit with customer order records.",
+      "evidence_reference": "RECON_EVIDENCE_FOR_TXN_SYN_105",
+      "simulation_label": "AI-simulated scenario \u2014 not real customer feedback",
+      "model_name": "qwen-plus/gpt-4o-mini (simulated)",
+      "repository_revision": "7657031ac01184afe2cb220f5ee3545573b5e843",
+      "status": "PRERECORDED"
+    },
+    {
+      "simulation_run_id": "sim_e2e_verified_demo_pack_TXN_SYN_105",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_105",
+      "agent_role": "GATEWAY",
+      "agent_id": "SYS_GATEWAY_NODE",
+      "persona_name": "Synthetic Gateway Orchestrator (System Actor)",
+      "event_type": "ORPHANED_CREDIT_FLAG",
+      "event_timestamp": "2026-10-16T12:00:00Z",
+      "observation": "Bank settlement row BK_REC_105 arrived with no matching gateway capture record in table.",
+      "question_or_feedback": "Orphaned bank record detected. Possible direct NEFT/IMPS or out-of-band settlement.",
+      "evidence_reference": "RECON_EVIDENCE_FOR_TXN_SYN_105",
+      "simulation_label": "AI-simulated scenario \u2014 not real customer feedback",
+      "model_name": "qwen-plus/gpt-4o-mini (simulated)",
+      "repository_revision": "7657031ac01184afe2cb220f5ee3545573b5e843",
+      "status": "PRERECORDED"
+    },
+    {
+      "simulation_run_id": "sim_e2e_verified_demo_pack_TXN_SYN_106",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_106",
+      "agent_role": "CUSTOMER",
+      "agent_id": "SIM_CUST_106",
+      "persona_name": "Kavita Rao (Fictional Persona)",
+      "event_type": "DOUBLE_PAY_CONCERN",
+      "event_timestamp": "2026-10-16T12:00:00Z",
+      "observation": "The payment page refreshed twice when clicking Pay Now.",
+      "question_or_feedback": "Please ensure I am not billed twice for \u20b94,500.00.",
+      "evidence_reference": "RECON_EVIDENCE_FOR_TXN_SYN_106",
+      "simulation_label": "AI-simulated scenario \u2014 not real customer feedback",
+      "model_name": "qwen-plus/gpt-4o-mini (simulated)",
+      "repository_revision": "7657031ac01184afe2cb220f5ee3545573b5e843",
+      "status": "PRERECORDED"
+    },
+    {
+      "simulation_run_id": "sim_e2e_verified_demo_pack_TXN_SYN_106",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_106",
+      "agent_role": "MERCHANT",
+      "agent_id": "SIM_MERCH_002",
+      "persona_name": "Bharat Retailers (Fictional Merchant)",
+      "event_type": "DUPLICATE_ORDER_HOLD",
+      "event_timestamp": "2026-10-16T12:00:00Z",
+      "observation": "We received two identical gateway notifications for order TXN_SYN_106 spaced 1 minute apart.",
+      "question_or_feedback": "Need confirmation before processing shipment whether two units were ordered.",
+      "evidence_reference": "RECON_EVIDENCE_FOR_TXN_SYN_106",
+      "simulation_label": "AI-simulated scenario \u2014 not real customer feedback",
+      "model_name": "qwen-plus/gpt-4o-mini (simulated)",
+      "repository_revision": "7657031ac01184afe2cb220f5ee3545573b5e843",
+      "status": "PRERECORDED"
+    },
+    {
+      "simulation_run_id": "sim_e2e_verified_demo_pack_TXN_SYN_106",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_106",
+      "agent_role": "GATEWAY",
+      "agent_id": "SYS_GATEWAY_NODE",
+      "persona_name": "Synthetic Gateway Orchestrator (System Actor)",
+      "event_type": "IDEMPOTENCY_TRIP",
+      "event_timestamp": "2026-10-16T12:00:00Z",
+      "observation": "Duplicate records GW_REC_106_A and GW_REC_106_B identified by ROW_NUMBER() window function.",
+      "question_or_feedback": "Idempotency key failure or network retry. Duplicate flagged for deduplication.",
+      "evidence_reference": "RECON_EVIDENCE_FOR_TXN_SYN_106",
+      "simulation_label": "AI-simulated scenario \u2014 not real customer feedback",
+      "model_name": "qwen-plus/gpt-4o-mini (simulated)",
+      "repository_revision": "7657031ac01184afe2cb220f5ee3545573b5e843",
+      "status": "PRERECORDED"
+    },
+    {
+      "simulation_run_id": "sim_e2e_verified_demo_pack_TXN_SYN_106",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_106",
+      "agent_role": "CUSTOMER",
+      "agent_id": "SIM_CUST_106",
+      "persona_name": "Kavita Rao (Fictional Persona)",
+      "event_type": "DOUBLE_PAY_CONCERN",
+      "event_timestamp": "2026-10-16T12:00:00Z",
+      "observation": "The payment page refreshed twice when clicking Pay Now.",
+      "question_or_feedback": "Please ensure I am not billed twice for \u20b94,500.00.",
+      "evidence_reference": "RECON_EVIDENCE_FOR_TXN_SYN_106",
+      "simulation_label": "AI-simulated scenario \u2014 not real customer feedback",
+      "model_name": "qwen-plus/gpt-4o-mini (simulated)",
+      "repository_revision": "7657031ac01184afe2cb220f5ee3545573b5e843",
+      "status": "PRERECORDED"
+    },
+    {
+      "simulation_run_id": "sim_e2e_verified_demo_pack_TXN_SYN_106",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_106",
+      "agent_role": "MERCHANT",
+      "agent_id": "SIM_MERCH_002",
+      "persona_name": "Bharat Retailers (Fictional Merchant)",
+      "event_type": "DUPLICATE_ORDER_HOLD",
+      "event_timestamp": "2026-10-16T12:00:00Z",
+      "observation": "We received two identical gateway notifications for order TXN_SYN_106 spaced 1 minute apart.",
+      "question_or_feedback": "Need confirmation before processing shipment whether two units were ordered.",
+      "evidence_reference": "RECON_EVIDENCE_FOR_TXN_SYN_106",
+      "simulation_label": "AI-simulated scenario \u2014 not real customer feedback",
+      "model_name": "qwen-plus/gpt-4o-mini (simulated)",
+      "repository_revision": "7657031ac01184afe2cb220f5ee3545573b5e843",
+      "status": "PRERECORDED"
+    },
+    {
+      "simulation_run_id": "sim_e2e_verified_demo_pack_TXN_SYN_106",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_106",
+      "agent_role": "GATEWAY",
+      "agent_id": "SYS_GATEWAY_NODE",
+      "persona_name": "Synthetic Gateway Orchestrator (System Actor)",
+      "event_type": "IDEMPOTENCY_TRIP",
+      "event_timestamp": "2026-10-16T12:00:00Z",
+      "observation": "Duplicate records GW_REC_106_A and GW_REC_106_B identified by ROW_NUMBER() window function.",
+      "question_or_feedback": "Idempotency key failure or network retry. Duplicate flagged for deduplication.",
+      "evidence_reference": "RECON_EVIDENCE_FOR_TXN_SYN_106",
+      "simulation_label": "AI-simulated scenario \u2014 not real customer feedback",
+      "model_name": "qwen-plus/gpt-4o-mini (simulated)",
+      "repository_revision": "7657031ac01184afe2cb220f5ee3545573b5e843",
+      "status": "PRERECORDED"
+    },
+    {
+      "simulation_run_id": "sim_e2e_verified_demo_pack_TXN_SYN_107",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_107",
+      "agent_role": "CUSTOMER",
+      "agent_id": "SIM_CUST_107",
+      "persona_name": "Suresh Nair (Fictional Persona)",
+      "event_type": "DELAY_COMPLAINT",
+      "event_timestamp": "2026-10-16T12:00:00Z",
+      "observation": "Transaction was deducted 3 days ago from my savings account.",
+      "question_or_feedback": "Merchant claimed payment had not arrived until today.",
+      "evidence_reference": "RECON_EVIDENCE_FOR_TXN_SYN_107",
+      "simulation_label": "AI-simulated scenario \u2014 not real customer feedback",
+      "model_name": "qwen-plus/gpt-4o-mini (simulated)",
+      "repository_revision": "7657031ac01184afe2cb220f5ee3545573b5e843",
+      "status": "PRERECORDED"
+    },
+    {
+      "simulation_run_id": "sim_e2e_verified_demo_pack_TXN_SYN_107",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_107",
+      "agent_role": "MERCHANT",
+      "agent_id": "SIM_MERCH_003",
+      "persona_name": "Deccan Electronics (Fictional Merchant)",
+      "event_type": "SLA_BREACH_INQUIRY",
+      "event_timestamp": "2026-10-16T12:00:00Z",
+      "observation": "Funds for \u20b95,000.00 took 74 hours to settle into our operational account (threshold: 24h).",
+      "question_or_feedback": "Why was the settlement cycle delayed over the weekend?",
+      "evidence_reference": "RECON_EVIDENCE_FOR_TXN_SYN_107",
+      "simulation_label": "AI-simulated scenario \u2014 not real customer feedback",
+      "model_name": "qwen-plus/gpt-4o-mini (simulated)",
+      "repository_revision": "7657031ac01184afe2cb220f5ee3545573b5e843",
+      "status": "PRERECORDED"
+    },
+    {
+      "simulation_run_id": "sim_e2e_verified_demo_pack_TXN_SYN_107",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_107",
+      "agent_role": "GATEWAY",
+      "agent_id": "SYS_GATEWAY_NODE",
+      "persona_name": "Synthetic Gateway Orchestrator (System Actor)",
+      "event_type": "SLA_MONITOR_ALERT",
+      "event_timestamp": "2026-10-16T12:00:00Z",
+      "observation": "Settlement time delta = 72 hours, exceeding scenario setting of 24 hours.",
+      "question_or_feedback": "Flagged for acquiring bank batch latency review. Note: Scenario setting, not RBI legal rule.",
+      "evidence_reference": "RECON_EVIDENCE_FOR_TXN_SYN_107",
+      "simulation_label": "AI-simulated scenario \u2014 not real customer feedback",
+      "model_name": "qwen-plus/gpt-4o-mini (simulated)",
+      "repository_revision": "7657031ac01184afe2cb220f5ee3545573b5e843",
+      "status": "PRERECORDED"
+    },
+    {
+      "simulation_run_id": "sim_e2e_verified_demo_pack_TXN_SYN_108",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_108",
+      "agent_role": "CUSTOMER",
+      "agent_id": "SIM_CUST_108",
+      "persona_name": "Deepika Sen (Fictional Persona)",
+      "event_type": "REVERSAL_CONFUSION",
+      "event_timestamp": "2026-10-16T12:00:00Z",
+      "observation": "I requested a cancellation immediately after initiating the payment of \u20b92,200.00.",
+      "question_or_feedback": "Gateway marked cancelled, but my bank statement shows money settled.",
+      "evidence_reference": "RECON_EVIDENCE_FOR_TXN_SYN_108",
+      "simulation_label": "AI-simulated scenario \u2014 not real customer feedback",
+      "model_name": "qwen-plus/gpt-4o-mini (simulated)",
+      "repository_revision": "7657031ac01184afe2cb220f5ee3545573b5e843",
+      "status": "PRERECORDED"
+    },
+    {
+      "simulation_run_id": "sim_e2e_verified_demo_pack_TXN_SYN_108",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_108",
+      "agent_role": "MERCHANT",
+      "agent_id": "SIM_MERCH_004",
+      "persona_name": "Himalayan Goods (Fictional Merchant)",
+      "event_type": "REFUND_TRIAGE",
+      "event_timestamp": "2026-10-16T12:00:00Z",
+      "observation": "Order shows REVERSED in merchant dashboard, yet bank settled \u20b92,200.00 to our balance.",
+      "question_or_feedback": "Should we issue a manual refund or will the bank auto-reverse this chargeback?",
+      "evidence_reference": "RECON_EVIDENCE_FOR_TXN_SYN_108",
+      "simulation_label": "AI-simulated scenario \u2014 not real customer feedback",
+      "model_name": "qwen-plus/gpt-4o-mini (simulated)",
+      "repository_revision": "7657031ac01184afe2cb220f5ee3545573b5e843",
+      "status": "PRERECORDED"
+    },
+    {
+      "simulation_run_id": "sim_e2e_verified_demo_pack_TXN_SYN_108",
+      "scenario_id": "SCN_CORE_8PACK",
+      "transaction_id": "TXN_SYN_108",
+      "agent_role": "GATEWAY",
+      "agent_id": "SYS_GATEWAY_NODE",
+      "persona_name": "Synthetic Gateway Orchestrator (System Actor)",
+      "event_type": "DISPUTE_ESCALATION",
+      "event_timestamp": "2026-10-16T12:00:00Z",
+      "observation": "Conflicting status: Gateway=REVERSED (Customer Request) vs Bank=SETTLED. Ambiguity flag tripped.",
+      "question_or_feedback": "Escalated to operations investigation queue. No automated fund movement permitted.",
+      "evidence_reference": "RECON_EVIDENCE_FOR_TXN_SYN_108",
+      "simulation_label": "AI-simulated scenario \u2014 not real customer feedback",
+      "model_name": "qwen-plus/gpt-4o-mini (simulated)",
+      "repository_revision": "7657031ac01184afe2cb220f5ee3545573b5e843",
+      "status": "PRERECORDED"
+    }
+  ],
+  "audit_trail": [
+    {
+      "event_id": "EVT_0001_DATASET_GENERATED",
+      "run_id": "e2e_verified_demo_pack",
+      "scenario_id": "SCN_CORE_8PACK",
+      "timestamp_utc": "2026-10-16T16:38:45.141694+00:00",
+      "stage": "DATASET_GENERATED",
+      "status": "SUCCESS",
+      "engine": "PYTHON_RNG",
+      "details": {
+        "seed": 42
+      },
+      "event_hash": "c94e9e529cd8d60df6a10ad246bbc646eb5080d27f1b567df95104ac672218c4"
+    },
+    {
+      "event_id": "EVT_0002_RECONCILIATION_COMPLETED",
+      "run_id": "e2e_verified_demo_pack",
+      "scenario_id": "SCN_CORE_8PACK",
+      "timestamp_utc": "2026-10-16T16:38:45.141750+00:00",
+      "stage": "RECONCILIATION_COMPLETED",
+      "status": "SUCCESS",
+      "engine": "LOCAL_SQLITE_ENGINE_v3.50.4",
+      "details": {
+        "prep_time_ms": 0.009,
+        "load_time_ms": 0.465,
+        "query_time_ms": 0.674,
+        "total_time_ms": 1.366
+      },
+      "event_hash": "841b9df860f75a3e97ffcb99ccf161b55dae39558679a5c4b280463683c8cf15"
+    },
+    {
+      "event_id": "EVT_0003_SIMULATION_COMPLETED",
+      "run_id": "e2e_verified_demo_pack",
+      "scenario_id": "SCN_CORE_8PACK",
+      "timestamp_utc": "2026-10-16T16:38:45.141774+00:00",
+      "stage": "SIMULATION_COMPLETED",
+      "status": "SUCCESS",
+      "engine": "MIROFISH_STORE",
+      "details": {
+        "events": 27
+      },
+      "event_hash": "ef28c5579590521b03fe84429995e8bb69625e3cb1f5401faf8f7c0e7e79e69a"
+    }
+  ]
+}
