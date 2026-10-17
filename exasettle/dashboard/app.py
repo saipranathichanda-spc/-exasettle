@@ -89,6 +89,7 @@ async def emit_event(event_type: str, data: Dict[str, Any]):
 @app.get("/api/health")
 def get_service_health():
     """Retrieve live service health for all components without secret leakage."""
+    Settings.reload()
     return run_preflight()
 
 

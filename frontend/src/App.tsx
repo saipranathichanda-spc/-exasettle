@@ -514,9 +514,9 @@ export default function App() {
               { service_name: "Zep Memory Graph", status: "CHECKING", latency_ms: null, details: "Checking graph..." },
               { service_name: "ExaSettle Orchestrator", status: "CHECKING", latency_ms: null, details: "FastAPI loopback..." },
             ]).map((svc, i) => {
-              const isOnline = svc.status === "ONLINE" || svc.status === "ACTIVE"
+              const isHealthy = svc.status === "ONLINE" || svc.status === "ACTIVE" || svc.status === "CONFIGURED"
               const isStandby = svc.status === "STANDBY"
-              const isMissingOrOffline = svc.status === "OFFLINE" || svc.status === "MISSING"
+              const isMissingOrOffline = svc.status === "OFFLINE" || svc.status === "MISSING" || svc.status === "UNHEALTHY" || svc.status === "NOT_CONFIGURED" || svc.status === "ERROR"
 
               return (
                 <div
@@ -527,7 +527,7 @@ export default function App() {
                     <span className="text-xs font-semibold text-slate-200 truncate">{svc.service_name}</span>
                     <span
                       className={`inline-block w-2 h-2 rounded-full ${
-                        isOnline
+                        isHealthy
                           ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"
                           : isStandby
                           ? "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]"
@@ -540,7 +540,7 @@ export default function App() {
                   <div className="flex items-baseline justify-between text-[11px] mb-1">
                     <span
                       className={`font-mono font-semibold ${
-                        isOnline ? "text-emerald-400" : isStandby ? "text-amber-400" : "text-rose-400"
+                        isHealthy ? "text-emerald-400" : isStandby ? "text-amber-400" : "text-rose-400"
                       }`}
                     >
                       {svc.status}
