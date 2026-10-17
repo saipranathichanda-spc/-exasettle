@@ -256,7 +256,12 @@ def check_mirofish_service() -> ServiceHealth:
     import requests
     t0 = time.perf_counter()
     try:
-        resp = requests.get(f"{Settings.MIROFISH_SERVICE_URL}/api/health", timeout=1.5)
+        try:
+            resp = requests.get(f"{Settings.MIROFISH_SERVICE_URL}/health", timeout=1.5)
+        except Exception:
+            resp = None
+        if resp is None or resp.status_code != 200:
+            resp = requests.get(f"{Settings.MIROFISH_SERVICE_URL}/api/health", timeout=1.5)
         elapsed_ms = round((time.perf_counter() - t0) * 1000, 2)
         if resp.status_code == 200:
             return ServiceHealth(

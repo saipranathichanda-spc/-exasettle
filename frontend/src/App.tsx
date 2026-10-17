@@ -182,7 +182,7 @@ export default function App() {
   // 30-Day Benchmark state
   const [monthlyData, setMonthlyData] = useState<any | null>(null)
   const [monthlyLoading, setMonthlyLoading] = useState(false)
-  const [activeChartTab, setActiveChartTab] = useState<"EXCEPTIONS" | "AUTO_MATCH" | "AGING" | "SCALABILITY" | "CLOSE_TIME">("EXCEPTIONS")
+  const [activeChartTab, setActiveChartTab] = useState<"EXCEPTIONS" | "AUTO_MATCH" | "AGING" | "SCALABILITY" | "CLOSE_TIME" | "FEEDBACK">("EXCEPTIONS")
 
   const dashboardRef = useRef<HTMLDivElement>(null)
 
@@ -1060,6 +1060,7 @@ export default function App() {
               { id: "AGING", label: "Open-Exception Aging", chart: "open_exception_aging.png" },
               { id: "SCALABILITY", label: "Scalability (Exasol vs SQLite)", chart: "query_time_vs_rows.png" },
               { id: "CLOSE_TIME", label: "Month-End Close Time", chart: "month_end_close_time.png" },
+              { id: "FEEDBACK", label: "Simulated Feedback (Round 1 vs 2)", chart: "simulated_feedback_scores.png" },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -1090,7 +1091,9 @@ export default function App() {
                       ? "open_exception_aging.png"
                       : activeChartTab === "SCALABILITY"
                       ? "query_time_vs_rows.png"
-                      : "month_end_close_time.png"
+                      : activeChartTab === "CLOSE_TIME"
+                      ? "month_end_close_time.png"
+                      : "simulated_feedback_scores.png"
                   }
                 </span>
                 <span className="text-[10px] bg-slate-900 px-2 py-0.5 rounded text-purple-300 font-mono">
@@ -1107,7 +1110,9 @@ export default function App() {
                     ? "open_exception_aging.png"
                     : activeChartTab === "SCALABILITY"
                     ? "query_time_vs_rows.png"
-                    : "month_end_close_time.png"
+                    : activeChartTab === "CLOSE_TIME"
+                    ? "month_end_close_time.png"
+                    : "simulated_feedback_scores.png"
                 }`}
                 alt="Benchmark Chart"
                 className="w-full rounded-lg border border-slate-850 object-contain max-h-[380px] bg-slate-900"
@@ -1317,6 +1322,72 @@ export default function App() {
                       ⚡ <strong>99.88% reduction in month-end close cycle time</strong> with complete auditability and zero paise discrepancy.
                     </div>
                   </div>
+                </div>
+              )}
+
+              {activeChartTab === "FEEDBACK" && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-xs font-semibold text-slate-200 uppercase tracking-wider">
+                      Simulated Feedback Loop (6 Personas • 36 Total Runs)
+                    </h4>
+                    <span className="text-[9px] bg-purple-950 text-purple-300 border border-purple-800 px-2 py-0.5 rounded font-mono font-bold">
+                      AI-SIMULATED • DIRECT_LLM_ROLEPLAY
+                    </span>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-slate-800 text-slate-400 text-[10px] uppercase font-mono">
+                          <th className="py-2">Persona</th>
+                          <th className="py-2 text-right">Round 1</th>
+                          <th className="py-2 text-right">Round 2</th>
+                          <th className="py-2 text-right">Net Gain</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-900 text-slate-300 font-mono text-[11px]">
+                        <tr>
+                          <td className="py-2 text-purple-300 font-semibold">Skeptical Competitor</td>
+                          <td className="py-2 text-right text-slate-400">2.89 / 5</td>
+                          <td className="py-2 text-right text-emerald-400">3.67 / 5</td>
+                          <td className="py-2 text-right text-emerald-400 font-bold">+0.78</td>
+                        </tr>
+                        <tr>
+                          <td className="py-2 text-purple-300 font-semibold">Investigative Journalist</td>
+                          <td className="py-2 text-right text-slate-400">2.67 / 5</td>
+                          <td className="py-2 text-right text-emerald-400">4.67 / 5</td>
+                          <td className="py-2 text-right text-emerald-400 font-bold">+2.00</td>
+                        </tr>
+                        <tr>
+                          <td className="py-2 text-purple-300 font-semibold">Shop Owner (SMB)</td>
+                          <td className="py-2 text-right text-slate-400">2.56 / 5</td>
+                          <td className="py-2 text-right text-emerald-400">4.67 / 5</td>
+                          <td className="py-2 text-right text-emerald-400 font-bold">+2.11</td>
+                        </tr>
+                        <tr>
+                          <td className="py-2 text-purple-300 font-semibold">Finance Ops Manager</td>
+                          <td className="py-2 text-right text-slate-400">4.11 / 5</td>
+                          <td className="py-2 text-right text-emerald-400">4.67 / 5</td>
+                          <td className="py-2 text-right text-emerald-400 font-bold">+0.56</td>
+                        </tr>
+                        <tr>
+                          <td className="py-2 text-purple-300 font-semibold">Statutory Auditor</td>
+                          <td className="py-2 text-right text-slate-400">4.44 / 5</td>
+                          <td className="py-2 text-right text-emerald-400">4.67 / 5</td>
+                          <td className="py-2 text-right text-emerald-400 font-bold">+0.23</td>
+                        </tr>
+                        <tr>
+                          <td className="py-2 text-purple-300 font-semibold">Random Internet User</td>
+                          <td className="py-2 text-right text-slate-400">4.00 / 5</td>
+                          <td className="py-2 text-right text-emerald-400">4.67 / 5</td>
+                          <td className="py-2 text-right text-emerald-400 font-bold">+0.67</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="text-[10px] text-slate-500 font-mono mt-2">
+                    Top objections resolved: 40h manual baseline labeling, Exasol Docker reproducibility, and automated webhook dispatch.
+                  </p>
                 </div>
               )}
             </div>

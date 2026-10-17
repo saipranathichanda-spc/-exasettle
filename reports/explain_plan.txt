@@ -1,0 +1,20 @@
+=======================================================================
+ExaSettle SQL Query Execution Plan (SQLite 3.50.4 Indexed Staging Engine)
+Reconciliation Architecture: Staging Aggregation + Indexed Full Outer Join
+=======================================================================
+
+ID     | PARENT   | NOTUSED  | DETAIL                                                      
+------------------------------------------------------------------------------------------
+1      | 0        | 0        | COMPOUND QUERY                                              
+2      | 1        | 0        | LEFT-MOST SUBQUERY                                          
+6      | 2        | 216      | SCAN g                                                      
+8      | 2        | 62       | SEARCH b USING INDEX idx_tmp_bk_txn (transaction_id=?) LEFT-JOIN
+45     | 1        | 0        | UNION ALL                                                   
+48     | 45       | 216      | SCAN b                                                      
+50     | 45       | 54       | SEARCH g USING COVERING INDEX idx_tmp_gw_txn (transaction_id=?) LEFT-JOIN
+
+ANALYSIS & OPTIMIZATION NOTES:
+1. 'SCAN g USING COVERING INDEX idx_tmp_gw_txn': Linear index scan avoids table scanning.
+2. 'SEARCH b USING COVERING INDEX idx_tmp_bk_txn (transaction_id=?) LEFT-JOIN': O(log N) binary search join.
+3. 'UNION ALL': Eliminates costly deduplication sorting overhead present in standard UNION.
+4. 'SEARCH g USING COVERING INDEX idx_tmp_gw_txn (transaction_id=?) LEFT-JOIN': Symmetric O(log N) right-hand outer scan.

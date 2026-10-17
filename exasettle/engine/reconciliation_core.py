@@ -406,6 +406,26 @@ def resolve_reconciliation_results(
             "reversal_status": row.get("gw_reversal")
         }
 
+        webhook_alert = None
+        if score >= 70:
+            webhook_alert = {
+                "alert_id": f"ALT_{txn_id}",
+                "severity": "CRITICAL" if score >= 90 else "HIGH",
+                "target_endpoint": "https://api.internal.bank/ops/v1/escalations",
+                "event_type": f"EXCEPTION_ESCALATION_{classification.value}",
+                "transaction_id": txn_id,
+                "priority_score": score,
+                "assigned_owner": meta["owner"],
+                "sla_window": meta["sla"],
+                "recommended_action": meta["action"],
+                "evidence_summary": {
+                    "diff_paise": diff_paise,
+                    "gateway_amt_paise": gw_amt,
+                    "bank_amt_paise": bk_amt,
+                    "delay_hours": round(delay_hours, 2)
+                }
+            }
+
         rec_result = ReconciliationResult(
             run_id=run_id,
             scenario_id=scenario_id,
@@ -433,6 +453,7 @@ def resolve_reconciliation_results(
             owner=meta["owner"],
             sla=meta["sla"],
             sla_hours=meta["sla_hours"],
+            webhook_alert=webhook_alert,
             ground_truth_label=gt_label,
             validation_status=validation_status
         )

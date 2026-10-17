@@ -88,8 +88,25 @@ class ReconciliationResult(BaseModel):
     owner: str = "Automated Engine"
     sla: str = "Instant / Closed"
     sla_hours: int = 0
+    webhook_alert: Optional[Dict[str, Any]] = None
     ground_truth_label: Optional[str] = None
     validation_status: str = "UNVALIDATED"  # VALIDATED_CORRECT | MISMATCH | UNVALIDATED
+
+
+class WebhookAlertPayload(BaseModel):
+    """Automated operational alert payload for high-priority exceptions (Priority >= 70)."""
+    alert_id: str
+    transaction_id: str
+    run_id: str
+    classification: str
+    priority_score: int
+    severity: str
+    owner: str
+    sla: str
+    recommended_action: str
+    created_at_utc: str
+    evidence_summary: Dict[str, Any]
+    dispatch_status: str = "PENDING_DISPATCH"
 
 
 class SimulationEvent(BaseModel):
