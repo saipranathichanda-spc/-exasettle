@@ -198,3 +198,41 @@ def test_exasol_personal_integration_or_explicit_skip():
         assert len(results) == 8
     except Exception as e:
         pytest.skip(f"Exasol Personal service unreachable at {Settings.EXASOL_HOST}:{Settings.EXASOL_PORT}: {e}")
+
+
+def test_explainability_metadata_fields_are_non_empty():
+    """
+    Verify that every single exception receives non-empty:
+    - reason_code
+    - evidence_fields
+    - recommended_action
+    - owner
+    - sla
+    - priority_score
+    """
+    pkg = generate_synthetic_dataset(seed=42)
+    reconciler = LocalFallbackReconciler()
+    results, _ = reconciler.reconcile(
+        pkg.gateway_records,
+        pkg.bank_records,
+        pkg.ground_truth
+    )
+
+    exceptions = [r for r in results if r.classification != ReconciliationClassification.MATCHED]
+    assert len(exceptions) == 7, "All 7 planted exceptions must be detected"
+
+    for r in results:
+        # Check all results (both matches and exceptions) have complete metadata
+        assert r.reason_code, f"reason_code missing for {r.transaction_id}"
+        assert r.reason_code.startswith("RC_"), f"reason_code must follow standard format for {r.transaction_id}"
+        assert isinstance(r.evidence_fields, dict) and len(r.evidence_fields) > 0, f"evidence_fields empty for {r.transaction_id}"
+        assert r.recommended_action, f"recommended_action missing for {r.transaction_id}"
+        assert r.owner, f"owner missing for {r.transaction_id}"
+        assert r.sla, f"sla missing for {r.transaction_id}"
+        assert 0 <= r.priority_score <= 100, f"priority_score out of range for {r.transaction_id}"
+
+        # Exceptions specifically must have non-zero SLA and active operational owner
+        if r.classification != ReconciliationClassification.MATCHED:
+            assert r.owner != "Automated Engine (No Manual Owner)", f"Exception {r.transaction_id} must have an active human owner"
+            assert r.sla_hours > 0, f"Exception {r.transaction_id} must have a positive SLA resolution timeframe"
+            assert r.priority_score > 0, f"Exception {r.transaction_id} must have priority > 0"

@@ -22,6 +22,7 @@ class AuditEvent(BaseModel):
     status: str
     engine: str
     details: Dict[str, Any]
+    prev_event_hash: Optional[str] = None
     event_hash: str
 
 
@@ -42,6 +43,7 @@ class AuditLogStore:
         now = datetime.now(timezone.utc).isoformat()
         event_id = f"EVT_{len(self._events) + 1:04d}_{stage}"
 
+        prev = self._last_hash
         payload = {
             "event_id": event_id,
             "run_id": run_id,
@@ -50,7 +52,7 @@ class AuditLogStore:
             "stage": stage,
             "status": status,
             "engine": engine,
-            "prev_hash": self._last_hash,
+            "prev_hash": prev,
             "details": details
         }
 
@@ -67,6 +69,7 @@ class AuditLogStore:
             status=status,
             engine=engine,
             details=details,
+            prev_event_hash=prev,
             event_hash=cur_hash
         )
         self._events.append(evt)

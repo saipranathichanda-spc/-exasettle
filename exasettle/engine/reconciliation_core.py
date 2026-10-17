@@ -20,6 +20,66 @@ from exasettle.core.models import (
 from exasettle.engine.priority_score import calculate_priority_score
 
 
+EXPLAINABILITY_METADATA = {
+    ReconciliationClassification.MATCHED: {
+        "reason_code": "RC_CLEAN_MATCH",
+        "action": "Auto-reconciled: No operational intervention required. Clear for ledger journal entry.",
+        "owner": "Automated Engine (No Manual Owner)",
+        "sla": "Instant / Closed",
+        "sla_hours": 0,
+    },
+    ReconciliationClassification.AMOUNT_MISMATCH: {
+        "reason_code": "RC_AMOUNT_MISMATCH",
+        "action": "Hold settlement difference; issue discrepancy notice to acquiring bank and cross-verify gateway capture log.",
+        "owner": "Settlement Operations Desk",
+        "sla": "24 Hours",
+        "sla_hours": 24,
+    },
+    ReconciliationClassification.FEE_VARIANCE_MDR: {
+        "reason_code": "RC_MDR_GST_MISMATCH",
+        "action": "Review merchant MDR contractual fee schedule and GST tax slab; adjust monthly fee invoice reconciliation credit.",
+        "owner": "Merchant Billing & Commercials",
+        "sla": "48 Hours",
+        "sla_hours": 48,
+    },
+    ReconciliationClassification.MISSING_IN_BANK: {
+        "reason_code": "RC_UNSETTLED_GATEWAY_CAPTURE",
+        "action": "Query nodal/escrow bank batch settlement logs with transaction UTR; verify acquiring cutoff window.",
+        "owner": "Treasury & Bank Nodal Desk",
+        "sla": "12 Hours",
+        "sla_hours": 12,
+    },
+    ReconciliationClassification.MISSING_IN_GATEWAY: {
+        "reason_code": "RC_UNMATCHED_BANK_CREDIT",
+        "action": "Investigate unmatched bank credit; verify whether customer payment was dropped at gateway webhook layer or direct credit.",
+        "owner": "Gateway DevOps & IT Support",
+        "sla": "12 Hours",
+        "sla_hours": 12,
+    },
+    ReconciliationClassification.DUPLICATE: {
+        "reason_code": "RC_DUPLICATE_TRANSMISSION",
+        "action": "Isolate duplicate settlement entry; flag for duplicate debit clawback to prevent double payout.",
+        "owner": "Risk & Fraud Prevention Unit",
+        "sla": "6 Hours",
+        "sla_hours": 6,
+    },
+    ReconciliationClassification.SETTLEMENT_DELAY: {
+        "reason_code": "RC_SLA_T1_BREACH",
+        "action": "File SLA breach report with banking partner; calculate compensatory interest if applicable under settlement guidelines.",
+        "owner": "Partner Banking Operations",
+        "sla": "24 Hours",
+        "sla_hours": 24,
+    },
+    ReconciliationClassification.AMBIGUOUS_REVIEW: {
+        "reason_code": "RC_REVERSAL_STATUS_CONFLICT",
+        "action": "Lock transaction balance; escalate to dispute resolution desk to confirm whether reversal was finalized before settlement.",
+        "owner": "Disputes & Chargeback Operations",
+        "sla": "4 Hours",
+        "sla_hours": 4,
+    },
+}
+
+
 # ANSI SQL query with CTE aggregation, FULL OUTER JOIN, and in-database SQL classification
 RECONCILIATION_SQL = """
 WITH gw_agg AS (
@@ -320,6 +380,32 @@ def resolve_reconciliation_results(
             "priority_breakdown": breakdown
         }
 
+        # Explainability metadata resolution
+        meta = EXPLAINABILITY_METADATA.get(classification, {
+            "reason_code": f"RC_{classification.value}",
+            "action": "Investigate exception according to standard operating procedure.",
+            "owner": "Operations Triage Team",
+            "sla": "24 Hours",
+            "sla_hours": 24,
+        })
+
+        evidence_fields = {
+            "transaction_id": txn_id,
+            "classification": classification.value,
+            "difference_paise": diff_paise,
+            "gateway_amount_paise": gw_amt,
+            "bank_amount_paise": bk_amt,
+            "gateway_fee_paise": gw_fee,
+            "bank_fee_paise": bk_fee,
+            "gateway_count": gw_count,
+            "bank_count": bk_count,
+            "settlement_delay_hours": round(delay_hours, 2),
+            "sla_threshold_hours": settlement_delay_threshold_hours,
+            "gateway_status": row.get("gw_status"),
+            "bank_status": row.get("bk_status"),
+            "reversal_status": row.get("gw_reversal")
+        }
+
         rec_result = ReconciliationResult(
             run_id=run_id,
             scenario_id=scenario_id,
@@ -341,6 +427,12 @@ def resolve_reconciliation_results(
             priority_score=score,
             priority_explanation=explanation,
             evidence_json=evidence,
+            reason_code=meta["reason_code"],
+            evidence_fields=evidence_fields,
+            recommended_action=meta["action"],
+            owner=meta["owner"],
+            sla=meta["sla"],
+            sla_hours=meta["sla_hours"],
             ground_truth_label=gt_label,
             validation_status=validation_status
         )

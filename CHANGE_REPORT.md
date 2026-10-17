@@ -54,7 +54,7 @@
 ## External services
 - Exasol: BLOCKED/OFFLINE — Docker container is not running on localhost:8563. PyExasol connection actively refused.
 - MiroFish: BLOCKED/OFFLINE — MiroFish microservice at http://localhost:5001 is offline. Submodule is pinned at commit 7657031ac01184afe2cb220f5ee3545573b5e843 in vendor/MiroFish.
-- Model provider/Zep: CONFIGURED — LLM_API_KEY is configured in private local .env (Google AI Studio Gemini endpoint, masked as AQ....RYQ); ZEP_API_KEY is unconfigured.
+- Model provider/Zep: CONFIGURED — LLM_API_KEY is configured in private local .env (Google AI Studio Gemini endpoint, securely loaded); ZEP_API_KEY is unconfigured.
 
 ## Remaining blockers and risks
 - Docker Desktop WSL backend is absent on the host Windows machine (`wsl --status` confirmed WSL is not installed), preventing the local `exasol/docker-db:latest` container from running. Consequence: Exasol live integration remains BLOCKED; local fallback engine must be used for demonstrations. Next action: Install WSL 2 and start Exasol Personal container via `docker run -d --name exasoldb -p 8563:8563 exasol/docker-db:latest`.

@@ -82,6 +82,12 @@ class ReconciliationResult(BaseModel):
     priority_score: int = Field(ge=0, le=100)
     priority_explanation: str
     evidence_json: Dict[str, Any]
+    reason_code: str = "RC_CLEAN_MATCH"
+    evidence_fields: Dict[str, Any] = Field(default_factory=dict)
+    recommended_action: str = "Auto-reconciled: No manual action required."
+    owner: str = "Automated Engine"
+    sla: str = "Instant / Closed"
+    sla_hours: int = 0
     ground_truth_label: Optional[str] = None
     validation_status: str = "UNVALIDATED"  # VALIDATED_CORRECT | MISMATCH | UNVALIDATED
 

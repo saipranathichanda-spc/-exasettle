@@ -363,6 +363,24 @@ async def sse_events():
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
+@app.get("/api/analytics/monthly")
+def get_monthly_analytics():
+    """Retrieve 30-day 300,000 transaction analytical dataset and accuracy metrics."""
+    summary_path = Path(__file__).resolve().parent.parent.parent / "reports" / "monthly_run_summary.json"
+    if not summary_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="Monthly analytics report not yet generated. Run `python scripts/generate_reports_and_charts.py` first."
+        )
+    with open(summary_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+# Mount reports/charts directory for visual dashboard access
+reports_charts_dir = Path(__file__).resolve().parent.parent.parent / "reports" / "charts"
+if reports_charts_dir.exists():
+    app.mount("/reports/charts", StaticFiles(directory=str(reports_charts_dir)), name="charts")
+
 # Mount static web frontend files
 static_dir = Path(__file__).resolve().parent / "static"
 if static_dir.exists():
