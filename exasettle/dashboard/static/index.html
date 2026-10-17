@@ -72,17 +72,16 @@
         <div class="control-group">
           <label for="engineSelect">Reconciliation Engine:</label>
           <select id="engineSelect">
+            <option value="FALLBACK" selected>Local Deterministic Engine (SQLite CTE - Active)</option>
             <option value="AUTO">Auto (Exasol if online, else Fallback)</option>
-            <option value="EXASOL">Exasol Personal (Primary)</option>
-            <option value="FALLBACK">Local Deterministic Engine (SQLite CTE)</option>
+            <option value="EXASOL">Exasol Personal (Requires Docker/Exasol)</option>
           </select>
         </div>
         <div class="control-group">
           <label for="simModeSelect">MiroFish Simulation Mode:</label>
           <select id="simModeSelect">
-            <option value="AUTO">Auto (Live if keys present, else Prerecorded)</option>
-            <option value="PRERECORDED">Prerecorded (Transparently Labeled)</option>
-            <option value="LIVE">Live LLM / Swarm</option>
+            <option value="PRERECORDED" selected>Prerecorded Demo Pack (Instant)</option>
+            <option value="LIVE">Live Gemini Flash (Google AI Studio)</option>
           </select>
         </div>
       </div>

@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 from exasettle.core.models import ServiceHealth, PreflightSummary
 
 # Load local .env if present
-load_dotenv(override=False)
+load_dotenv(override=True)
 
 
 def mask_secret(val: Optional[str]) -> str:
@@ -25,28 +25,98 @@ def mask_secret(val: Optional[str]) -> str:
 
 
 class Settings:
-    # Exasol Personal Analytical Database
-    EXASOL_HOST: str = os.environ.get("EXASOL_HOST", "localhost")
-    EXASOL_PORT: int = int(os.environ.get("EXASOL_PORT", "8563"))
-    EXASOL_USER: str = os.environ.get("EXASOL_USER", "sys")
-    EXASOL_PASSWORD: str = os.environ.get("EXASOL_PASSWORD", "")
-    EXASOL_SCHEMA: str = os.environ.get("EXASOL_SCHEMA", "EXA_SETTLE")
-    EXASOL_ENCRYPTION: bool = os.environ.get("EXASOL_ENCRYPTION", "True").lower() == "true"
+    @classmethod
+    def reload(cls):
+        load_dotenv(override=True)
 
-    # Application Configuration
-    APP_HOST: str = os.environ.get("APP_HOST", "0.0.0.0")
-    APP_PORT: int = int(os.environ.get("APP_PORT", "8000"))
-    APP_DEBUG: bool = os.environ.get("APP_DEBUG", "False").lower() == "true"
+    @property
+    def EXASOL_HOST(self) -> str:
+        return os.environ.get("EXASOL_HOST", "localhost")
 
-    # MiroFish and LLM Provider
-    LLM_API_KEY: str = os.environ.get("LLM_API_KEY", "")
-    LLM_BASE_URL: str = os.environ.get("LLM_BASE_URL", "https://api.openai.com/v1")
-    LLM_MODEL_NAME: str = os.environ.get("LLM_MODEL_NAME", "gpt-4o-mini")
-    ZEP_API_KEY: str = os.environ.get("ZEP_API_KEY", "")
-    MIROFISH_SERVICE_URL: str = os.environ.get("MIROFISH_SERVICE_URL", "http://localhost:5001")
+    @property
+    def EXASOL_PORT(self) -> int:
+        return int(os.environ.get("EXASOL_PORT", "8563"))
 
-    # Pinned Revisions
+    @property
+    def EXASOL_USER(self) -> str:
+        return os.environ.get("EXASOL_USER", "sys")
+
+    @property
+    def EXASOL_PASSWORD(self) -> str:
+        return os.environ.get("EXASOL_PASSWORD", "")
+
+    @property
+    def EXASOL_SCHEMA(self) -> str:
+        return os.environ.get("EXASOL_SCHEMA", "EXA_SETTLE")
+
+    @property
+    def EXASOL_ENCRYPTION(self) -> bool:
+        return os.environ.get("EXASOL_ENCRYPTION", "True").lower() == "true"
+
+    @property
+    def APP_HOST(self) -> str:
+        return os.environ.get("APP_HOST", "0.0.0.0")
+
+    @property
+    def APP_PORT(self) -> int:
+        return int(os.environ.get("APP_PORT", "8000"))
+
+    @property
+    def APP_DEBUG(self) -> bool:
+        return os.environ.get("APP_DEBUG", "False").lower() == "true"
+
+    @property
+    def LLM_API_KEY(self) -> str:
+        return os.environ.get("LLM_API_KEY", "")
+
+    @property
+    def LLM_BASE_URL(self) -> str:
+        return os.environ.get("LLM_BASE_URL", "")
+
+    @property
+    def LLM_MODEL_NAME(self) -> str:
+        return os.environ.get("LLM_MODEL_NAME", "")
+
+    @property
+    def ZEP_API_KEY(self) -> str:
+        return os.environ.get("ZEP_API_KEY", "")
+
+    @property
+    def MIROFISH_SERVICE_URL(self) -> str:
+        return os.environ.get("MIROFISH_SERVICE_URL", "http://localhost:5001")
+
     PINNED_MIROFISH_REVISION: str = "7657031ac01184afe2cb220f5ee3545573b5e843"
+
+    # Also support class attribute access
+    @classmethod
+    def get_llm_api_key(cls) -> str:
+        return os.environ.get("LLM_API_KEY", "")
+
+    @classmethod
+    def get_llm_base_url(cls) -> str:
+        """Resolve LLM API base URL, auto-detecting Google AI Studio Gemini."""
+        url = os.environ.get("LLM_BASE_URL")
+        if url:
+            return url
+        key = cls.get_llm_api_key()
+        if key and (key.startswith("AIza") or key.startswith("AQ.")):
+            return "https://generativelanguage.googleapis.com/v1beta/openai/"
+        return "https://api.openai.com/v1"
+
+    @classmethod
+    def get_llm_model_name(cls) -> str:
+        """Resolve LLM model name, defaulting to gemini-2.5-flash for Google AI Studio."""
+        model = os.environ.get("LLM_MODEL_NAME")
+        if model:
+            return model
+        key = cls.get_llm_api_key()
+        if key and (key.startswith("AIza") or key.startswith("AQ.")):
+            return "gemini-2.5-flash"
+        return "gpt-4o-mini"
+
+
+# Module-level instance for attribute access
+Settings = Settings()
 
 
 def check_exasol() -> ServiceHealth:
@@ -121,11 +191,15 @@ def check_model_api() -> ServiceHealth:
             last_checked_utc=now
         )
 
+    endpoint = Settings.get_llm_base_url()
+    model = Settings.get_llm_model_name()
+    provider = "Google AI Studio Gemini" if "generativelanguage.googleapis.com" in endpoint else "OpenAI Compatible"
+
     return ServiceHealth(
         service_name="LLM Model Provider API",
         status="CONFIGURED",
-        version_or_info=f"Endpoint: {Settings.LLM_BASE_URL}, Model: {Settings.LLM_MODEL_NAME}",
-        details=f"LLM_API_KEY is configured ({mask_secret(Settings.LLM_API_KEY)})",
+        version_or_info=f"{provider} ({model})",
+        details=f"LLM_API_KEY is configured ({mask_secret(Settings.LLM_API_KEY)}), Endpoint: {endpoint}",
         last_checked_utc=now
     )
 

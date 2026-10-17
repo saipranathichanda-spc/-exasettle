@@ -120,7 +120,6 @@ async def execute_run(req: RunRequest):
 
     results: List[ReconciliationResult] = []
     engine_metrics: Dict[str, Any] = {}
-
     if use_exasol:
         try:
             exasol_engine = ExasolReconciler()
@@ -132,9 +131,7 @@ async def execute_run(req: RunRequest):
                 settlement_delay_threshold_hours=req.settlement_delay_threshold_hours
             )
         except Exception as e:
-            if req.engine_preference == "EXASOL":
-                raise HTTPException(status_code=500, detail=f"Exasol execution failed: {str(e)}")
-            # Fallback
+            # Fallback gracefully and notify client transparently
             local_engine = LocalFallbackReconciler()
             results, engine_metrics = local_engine.reconcile(
                 pkg.gateway_records,
@@ -142,6 +139,8 @@ async def execute_run(req: RunRequest):
                 pkg.ground_truth,
                 settlement_delay_threshold_hours=req.settlement_delay_threshold_hours
             )
+            engine_metrics["engine_mode"] = "LOCAL_FALLBACK"
+            engine_metrics["notice"] = f"Exasol container at localhost:8563 is offline ({type(e).__name__}). Automatically executed on Local Deterministic Engine."
     else:
         local_engine = LocalFallbackReconciler()
         await emit_event("STATUS_TRANSITION", {"stage": "RECONCILIATION_RUNNING", "message": "Executing deterministic SQL on local fallback engine..."})

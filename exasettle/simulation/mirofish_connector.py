@@ -115,9 +115,11 @@ class MiroFishConnector:
     ) -> Tuple[List[SimulationEvent], Dict[str, Any]]:
         """Run live LLM queries with Section 10 prompts for Customer, Merchant, and Gateway."""
         from openai import OpenAI
+        endpoint = Settings.get_llm_base_url()
+        model_name = Settings.get_llm_model_name()
         client = OpenAI(
             api_key=self.llm_api_key,
-            base_url=Settings.LLM_BASE_URL
+            base_url=endpoint
         )
 
         roles = [
@@ -140,7 +142,7 @@ class MiroFishConnector:
 
             try:
                 response = client.chat.completions.create(
-                    model=Settings.LLM_MODEL_NAME,
+                    model=model_name,
                     messages=[
                         {"role": "system", "content": "You are role-playing in an offline, synthetic settlement reconciliation simulator. Follow the prompt format strictly."},
                         {"role": "user", "content": prompt}
