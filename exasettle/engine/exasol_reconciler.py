@@ -34,7 +34,7 @@ WITH gw_agg AS (
         GROUP_CONCAT(gateway_reference SEPARATOR ', ') as gw_references,
         GROUP_CONCAT(bank_reference SEPARATOR ', ') as gw_bank_references
     FROM gateway_records
-    WHERE run_id = {run_id:s}
+    WHERE run_id = {run_id}
     GROUP BY transaction_id, run_id, scenario_id
 ),
 bk_agg AS (
@@ -52,7 +52,7 @@ bk_agg AS (
         GROUP_CONCAT(gateway_reference SEPARATOR ', ') as bk_gw_references,
         GROUP_CONCAT(bank_reference SEPARATOR ', ') as bk_references
     FROM bank_records
-    WHERE run_id = {run_id:s}
+    WHERE run_id = {run_id}
     GROUP BY transaction_id, run_id, scenario_id
 ),
 joined AS (
@@ -118,6 +118,7 @@ class ExasolReconciler:
 
     def _get_connection(self):
         import pyexasol
+        import ssl
         if not self.password:
             raise ConnectionError(
                 "EXASOL_PASSWORD is empty or unset. Please configure Exasol credentials in your private .env file."
@@ -128,6 +129,7 @@ class ExasolReconciler:
             password=self.password,
             schema=self.schema,
             encryption=self.encryption,
+            websocket_sslopt={"cert_reqs": ssl.CERT_NONE} if self.encryption else None,
             connection_timeout=5
         )
 
@@ -215,8 +217,8 @@ class ExasolReconciler:
             run_id = gateway_records[0].run_id if gateway_records else (bank_records[0].run_id if bank_records else "run_unknown")
             
             # Clean existing records for this specific run_id
-            con.execute("DELETE FROM gateway_records WHERE run_id = {run_id:s}", {"run_id": run_id})
-            con.execute("DELETE FROM bank_records WHERE run_id = {run_id:s}", {"run_id": run_id})
+            con.execute("DELETE FROM gateway_records WHERE run_id = {run_id}", {"run_id": run_id})
+            con.execute("DELETE FROM bank_records WHERE run_id = {run_id}", {"run_id": run_id})
 
             con.import_from_iterable(gw_rows, "gateway_records")
             con.import_from_iterable(bk_rows, "bank_records")
@@ -226,13 +228,17 @@ class ExasolReconciler:
             t_query_start = time.perf_counter()
             stmt = con.execute(EXASOL_RECONCILIATION_SQL, {"run_id": run_id})
             raw_rows = stmt.fetchall()
-            col_names = [col["name"].lower() for col in stmt.columns()]
+            col_names = [col.lower() if isinstance(col, str) else col.get("name", "").lower() for col in stmt.columns()]
             dict_rows = [dict(zip(col_names, row)) for row in raw_rows]
             query_time_ms = round((time.perf_counter() - t_query_start) * 1000, 3)
 
             # Retrieve database metadata
-            version_str = str(con.meta.sql_type())
-            session_id = getattr(con, "session_id", "active")
+            try:
+                v_res = con.execute("SELECT PARAM_VALUE FROM SYS.EXA_METADATA WHERE PARAM_NAME='databaseProductVersion'").fetchone()
+                version_str = str(v_res[0]) if v_res else "Exasol Personal"
+            except Exception:
+                version_str = "Exasol Personal"
+            session_id = con.session_id() if callable(getattr(con, "session_id", None)) else getattr(con, "session_id", "active")
         finally:
             con.close()
 

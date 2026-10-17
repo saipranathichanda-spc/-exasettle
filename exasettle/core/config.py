@@ -140,15 +140,18 @@ def check_exasol() -> ServiceHealth:
     t0 = time.perf_counter()
     try:
         import pyexasol
+        import ssl
         con = pyexasol.connect(
             dsn=f"{Settings.EXASOL_HOST}:{Settings.EXASOL_PORT}",
             user=Settings.EXASOL_USER,
             password=Settings.EXASOL_PASSWORD,
             schema=Settings.EXASOL_SCHEMA,
             encryption=Settings.EXASOL_ENCRYPTION,
+            websocket_sslopt={"cert_reqs": ssl.CERT_NONE} if Settings.EXASOL_ENCRYPTION else None,
             connection_timeout=3
         )
-        version_info = con.meta.sql_type()
+        res = con.execute("SELECT PARAM_VALUE FROM SYS.EXA_METADATA WHERE PARAM_NAME='databaseProductVersion'").fetchone()
+        version_info = res[0] if res else "Exasol Personal"
         con.close()
         elapsed_ms = round((time.perf_counter() - t0) * 1000, 2)
         return ServiceHealth(
@@ -156,7 +159,7 @@ def check_exasol() -> ServiceHealth:
             status="ONLINE",
             latency_ms=elapsed_ms,
             version_or_info=str(version_info),
-            details=f"Connected to {Settings.EXASOL_HOST}:{Settings.EXASOL_PORT} as {Settings.EXASOL_USER}",
+            details=f"Connected to {Settings.EXASOL_HOST}:{Settings.EXASOL_PORT} as {Settings.EXASOL_USER} (Exasol {version_info})",
             last_checked_utc=now
         )
     except Exception as e:

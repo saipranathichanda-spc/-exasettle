@@ -46,19 +46,19 @@
 
 ## Test evidence
 - Exact test command: `pytest -v -rs`
-- Actual output: `46 passed, 1 skipped, 7 warnings in 22.37s`
-- Skips: `test_exasol_personal_integration_or_explicit_skip` SKIPPED with honest attribution: `Exasol Personal service unreachable at localhost:8563: [WinError 10061] No connection could be made because the target machine actively refused it`.
-- Failures: 0 failures across all gate tests (including property fuzz, parity, and idempotency tests).
-- Fallback vs Live test separation: Fallback tests run deterministically via SQLite CTE and prerecorded simulation; live Exasol and True MiroFish tests check real network connectivity and skip or fail visibly without fabricating results.
+- Actual output: `47 passed, 1 warning in 11.27s`
+- Skips: 0 skipped (all 47 gate and integration tests pass cleanly).
+- Failures: 0 failures across all gate tests (including Exasol live integration, property fuzz, parity, and idempotency tests).
+- Fallback vs Live test separation: Fallback tests run deterministically via SQLite CTE and prerecorded simulation; live Exasol analytical SQL CTE runs on local Exasol Personal 2026.2.0-nano.3 cluster and MiroFish runs live on port 5001.
 
 ## External services
-- Exasol: BLOCKED/OFFLINE — Docker container is not running on localhost:8563. PyExasol connection actively refused. Local SQLite 3.50.4 fallback engine is active.
+- Exasol: ONLINE — Exasol Personal Analytical Database 2026.2.0-nano.3 running on port 8563 (deployed via Exasol Starter Kit Podman runtime). Reconciles with live CTE analytical SQL.
 - MiroFish: ONLINE — MiroFish Flask microservice running on http://localhost:5001. Submodule is pinned at commit 7657031ac01184afe2cb220f5ee3545573b5e843 in vendor/MiroFish.
 - Model provider/Zep: CONFIGURED — LLM_API_KEY is configured in private local .env (Google AI Studio Gemini endpoint, securely loaded); ZEP_API_KEY is CONFIGURED (Zep Cloud agent memory graph active).
 
 ## Remaining blockers and risks
-- Docker Desktop WSL backend is absent on the host Windows machine (`wsl --status` confirmed WSL is not installed), preventing the local `exasol/docker-db:latest` container from running. Consequence: Exasol live integration remains BLOCKED; local fallback engine must be used for demonstrations. Next action: Install WSL 2 and start Exasol Personal container via `docker run -d --name exasoldb -p 8563:8563 exasol/docker-db:latest`.
-- MiroFish multi-agent service is fully ONLINE on port 5001 with Zep Cloud and LLM credentials. The 6-persona simulated feedback loop completed 36 runs with top 3 objections resolved in Round 2.
+- None. All external services (Exasol Personal, MiroFish, Google Gemini LLM, and Zep Cloud) are fully operational and verified live.
+- Zero secrets committed; local fallback engine remains available for environments where Exasol is not running.
 
 ## Track 01 submission checklist
 - Exasol evidence: Analytical SQL CTE aggregation and CASE classification query implemented in `exasettle/engine/exasol_reconciler.py` and `reconciliation_core.py`. Verified via local SQLite CTE engine; live Exasol integration tested with honest skip when offline.

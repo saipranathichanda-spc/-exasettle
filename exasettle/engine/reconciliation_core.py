@@ -257,12 +257,12 @@ def resolve_reconciliation_results(
         run_id = row["run_id"]
         scenario_id = row["scenario_id"]
 
-        gw_count = row.get("gw_count", 0)
-        bk_count = row.get("bk_count", 0)
-        gw_amt = row.get("gw_amount_paise")
-        bk_amt = row.get("bk_amount_paise")
-        gw_fee = row.get("gw_fee_paise")
-        bk_fee = row.get("bk_fee_paise")
+        gw_count = int(row.get("gw_count") or 0)
+        bk_count = int(row.get("bk_count") or 0)
+        gw_amt = int(row.get("gw_amount_paise")) if row.get("gw_amount_paise") is not None else None
+        bk_amt = int(row.get("bk_amount_paise")) if row.get("bk_amount_paise") is not None else None
+        gw_fee = int(row.get("gw_fee_paise")) if row.get("gw_fee_paise") is not None else None
+        bk_fee = int(row.get("bk_fee_paise")) if row.get("bk_fee_paise") is not None else None
         sql_cls = row.get("preliminary_sql_classification", "CANDIDATE_MATCH")
 
         gw_rec_ids = [s.strip() for s in (row.get("gw_record_ids") or "").split(",") if s.strip()]

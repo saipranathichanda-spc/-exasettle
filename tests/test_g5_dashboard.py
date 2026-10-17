@@ -74,12 +74,18 @@ def test_static_dashboard_html_served():
     assert "ExaThon India 2026" in resp.text
 
 
-def test_explicit_exasol_mode_failure_no_silent_fallback():
+def test_explicit_exasol_mode_failure_no_silent_fallback(monkeypatch):
     """
     NON-NEGOTIABLE WORKING RULE 4:
     An explicit Exasol run that cannot use Exasol must fail visibly with HTTP 503,
     not silently switch engines.
     """
+    def mock_fail(*args, **kwargs):
+        raise ConnectionError("Exasol Personal cluster unreachable at localhost:9999")
+
+    from exasettle.engine.exasol_reconciler import ExasolReconciler
+    monkeypatch.setattr(ExasolReconciler, "reconcile", mock_fail)
+
     run_payload = {
         "scenario_id": "SCN_CORE_8PACK",
         "seed": 42,
