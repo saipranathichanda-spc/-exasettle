@@ -1,0 +1,170 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 680" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b0f19" />
+      <stop offset="50%" stop-color="#111827" />
+      <stop offset="100%" stop-color="#070a12" />
+    </linearGradient>
+    <linearGradient id="purpleGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8b5cf6" />
+      <stop offset="100%" stop-color="#ec4899" />
+    </linearGradient>
+    <linearGradient id="cyanGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="100%" stop-color="#3b82f6" />
+    </linearGradient>
+    <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="1200" height="680" rx="16" fill="url(#bgGrad)" stroke="#1e293b" stroke-width="2" />
+
+  <!-- Mac / Window Header -->
+  <rect x="0" y="0" width="1200" height="48" rx="16" fill="#0f172a" />
+  <rect x="0" y="32" width="1200" height="16" fill="#0f172a" />
+  <line x1="0" y1="48" x2="1200" y2="48" stroke="#1e293b" stroke-width="1" />
+  <circle cx="28" cy="24" r="6" fill="#ef4444" />
+  <circle cx="48" cy="24" r="6" fill="#f59e0b" />
+  <circle cx="68" cy="24" r="6" fill="#10b981" />
+  <text x="100" y="29" fill="#94a3b8" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="500">ExaSettle — Financial Reconciliation &amp; Exception Intelligence Engine (Exasol Personal CTEs)</text>
+  <rect x="1060" y="14" width="116" height="20" rx="10" fill="#1e293b" />
+  <text x="1118" y="28" text-anchor="middle" fill="#38bdf8" font-family="ui-sans-serif, system-ui, sans-serif" font-size="10" font-weight="600">ENGINE: ACTIVE</text>
+
+  <!-- Top Metrics Bar (KPI Cards) -->
+  <g transform="translate(40, 70)">
+    <!-- KPI 1 -->
+    <rect x="0" y="0" width="208" height="88" rx="10" fill="#0f172a" stroke="#1e293b" stroke-width="1" />
+    <text x="16" y="28" fill="#94a3b8" font-family="ui-sans-serif, system-ui, sans-serif" font-size="11" font-weight="600">TOTAL RECONCILED</text>
+    <text x="16" y="60" fill="#f8fafc" font-family="ui-sans-serif, system-ui, sans-serif" font-size="26" font-weight="700">8 Txns</text>
+    <text x="16" y="76" fill="#64748b" font-family="ui-sans-serif, system-ui, sans-serif" font-size="10">Dual-feed capture</text>
+
+    <!-- KPI 2 -->
+    <rect x="228" y="0" width="208" height="88" rx="10" fill="#0f172a" stroke="#065f46" stroke-width="1" />
+    <text x="244" y="28" fill="#34d399" font-family="ui-sans-serif, system-ui, sans-serif" font-size="11" font-weight="600">CLEAN MATCHES</text>
+    <text x="244" y="60" fill="#10b981" font-family="ui-sans-serif, system-ui, sans-serif" font-size="26" font-weight="700">5 Clean</text>
+    <text x="244" y="76" fill="#059669" font-family="ui-sans-serif, system-ui, sans-serif" font-size="10">Auto-cleared (P0)</text>
+
+    <!-- KPI 3 -->
+    <rect x="456" y="0" width="208" height="88" rx="10" fill="#0f172a" stroke="#854d0e" stroke-width="1" />
+    <text x="472" y="28" fill="#fde047" font-family="ui-sans-serif, system-ui, sans-serif" font-size="11" font-weight="600">EXCEPTIONS FLAGGED</text>
+    <text x="472" y="60" fill="#eab308" font-family="ui-sans-serif, system-ui, sans-serif" font-size="26" font-weight="700">3 Cases</text>
+    <text x="472" y="76" fill="#ca8a04" font-family="ui-sans-serif, system-ui, sans-serif" font-size="10">Triage priority &gt; 0</text>
+
+    <!-- KPI 4 -->
+    <rect x="684" y="0" width="208" height="88" rx="10" fill="#0f172a" stroke="#991b1b" stroke-width="1" />
+    <text x="700" y="28" fill="#f87171" font-family="ui-sans-serif, system-ui, sans-serif" font-size="11" font-weight="600">AMOUNT AT ISSUE</text>
+    <text x="700" y="60" fill="#ef4444" font-family="ui-sans-serif, system-ui, sans-serif" font-size="26" font-weight="700">₹14,500.00</text>
+    <text x="700" y="76" fill="#b91c1c" font-family="ui-sans-serif, system-ui, sans-serif" font-size="10">Exact integer paise</text>
+
+    <!-- KPI 5 -->
+    <rect x="912" y="0" width="208" height="88" rx="10" fill="#0f172a" stroke="#1e40af" stroke-width="1" />
+    <text x="928" y="28" fill="#60a5fa" font-family="ui-sans-serif, system-ui, sans-serif" font-size="11" font-weight="600">GROUND TRUTH ACCURACY</text>
+    <text x="928" y="60" fill="#38bdf8" font-family="ui-sans-serif, system-ui, sans-serif" font-size="26" font-weight="700">100.0%</text>
+    <text x="928" y="76" fill="#0284c7" font-family="ui-sans-serif, system-ui, sans-serif" font-size="10">8/8 Test Pack verified</text>
+  </g>
+
+  <!-- Table Container -->
+  <g transform="translate(40, 185)">
+    <rect x="0" y="0" width="1120" height="455" rx="12" fill="#0f172a" stroke="#1e293b" stroke-width="1" />
+    
+    <!-- Table Header Bar -->
+    <rect x="0" y="0" width="1120" height="42" rx="12" fill="#1e293b" />
+    <rect x="0" y="30" width="1120" height="12" fill="#1e293b" />
+    <line x1="0" y1="42" x2="1120" y2="42" stroke="#334155" stroke-width="1" />
+    <text x="24" y="26" fill="#cbd5e1" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600">TXN ID</text>
+    <text x="140" y="26" fill="#cbd5e1" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600">CLASSIFICATION</text>
+    <text x="290" y="26" fill="#cbd5e1" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600">PRIORITY</text>
+    <text x="390" y="26" fill="#cbd5e1" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600">GATEWAY AMT</text>
+    <text x="510" y="26" fill="#cbd5e1" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600">BANK AMT</text>
+    <text x="630" y="26" fill="#cbd5e1" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600">VARIANCE</text>
+    <text x="740" y="26" fill="#cbd5e1" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600">DETERMINISTIC SQL RULE</text>
+    <text x="1030" y="26" fill="#cbd5e1" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600">ACTION</text>
+
+    <!-- Row 1: Clean Match -->
+    <g transform="translate(0, 42)">
+      <rect x="0" y="0" width="1120" height="48" fill="#0f172a" />
+      <line x1="0" y1="48" x2="1120" y2="48" stroke="#1e293b" stroke-width="1" />
+      <text x="24" y="30" fill="#f8fafc" font-family="ui-monospace, monospace" font-size="12" font-weight="600">TXN_SYN_101</text>
+      <rect x="140" y="14" width="84" height="20" rx="10" fill="#064e3b" />
+      <text x="182" y="28" text-anchor="middle" fill="#34d399" font-family="ui-sans-serif, system-ui, sans-serif" font-size="10" font-weight="700">MATCHED</text>
+      <rect x="290" y="14" width="60" height="20" rx="10" fill="#134e4a" stroke="#14b8a6" stroke-width="1" />
+      <text x="320" y="28" text-anchor="middle" fill="#5eead4" font-family="ui-sans-serif, system-ui, sans-serif" font-size="10" font-weight="600">0 / 100</text>
+      <text x="390" y="30" fill="#e2e8f0" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12">₹2,500.00</text>
+      <text x="510" y="30" fill="#e2e8f0" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12">₹2,500.00</text>
+      <text x="630" y="30" fill="#10b981" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12">₹0.00</text>
+      <text x="740" y="30" fill="#94a3b8" font-family="ui-monospace, monospace" font-size="11">RULE_CLEAN_MATCH</text>
+      <rect x="1020" y="12" width="76" height="24" rx="6" fill="#334155" />
+      <text x="1058" y="28" text-anchor="middle" fill="#f8fafc" font-family="ui-sans-serif, system-ui, sans-serif" font-size="11">Evidence</text>
+    </g>
+
+    <!-- Row 2: Amount Mismatch -->
+    <g transform="translate(0, 90)">
+      <rect x="0" y="0" width="1120" height="48" fill="#1e1b4b" fill-opacity="0.25" />
+      <line x1="0" y1="48" x2="1120" y2="48" stroke="#1e293b" stroke-width="1" />
+      <text x="24" y="30" fill="#f8fafc" font-family="ui-monospace, monospace" font-size="12" font-weight="600">TXN_SYN_102</text>
+      <rect x="140" y="14" width="118" height="20" rx="10" fill="#7f1d1d" />
+      <text x="199" y="28" text-anchor="middle" fill="#fca5a5" font-family="ui-sans-serif, system-ui, sans-serif" font-size="10" font-weight="700">AMOUNT_MISMATCH</text>
+      <rect x="290" y="14" width="60" height="20" rx="10" fill="#450a0a" stroke="#ef4444" stroke-width="1" />
+      <text x="320" y="28" text-anchor="middle" fill="#f87171" font-family="ui-sans-serif, system-ui, sans-serif" font-size="10" font-weight="600">85 / 100</text>
+      <text x="390" y="30" fill="#e2e8f0" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12">₹4,999.00</text>
+      <text x="510" y="30" fill="#e2e8f0" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12">₹4,500.00</text>
+      <text x="630" y="30" fill="#ef4444" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600">+₹499.00</text>
+      <text x="740" y="30" fill="#fca5a5" font-family="ui-monospace, monospace" font-size="11">RULE_AMOUNT_MISMATCH_SURCHARGE</text>
+      <rect x="1020" y="12" width="76" height="24" rx="6" fill="#4f46e5" />
+      <text x="1058" y="28" text-anchor="middle" fill="#ffffff" font-family="ui-sans-serif, system-ui, sans-serif" font-size="11">Evidence</text>
+    </g>
+
+    <!-- Row 3: Delayed Settlement -->
+    <g transform="translate(0, 138)">
+      <rect x="0" y="0" width="1120" height="48" fill="#0f172a" />
+      <line x1="0" y1="48" x2="1120" y2="48" stroke="#1e293b" stroke-width="1" />
+      <text x="24" y="30" fill="#f8fafc" font-family="ui-monospace, monospace" font-size="12" font-weight="600">TXN_SYN_103</text>
+      <rect x="140" y="14" width="130" height="20" rx="10" fill="#713f12" />
+      <text x="205" y="28" text-anchor="middle" fill="#fde047" font-family="ui-sans-serif, system-ui, sans-serif" font-size="10" font-weight="700">DELAYED_SETTLEMENT</text>
+      <rect x="290" y="14" width="60" height="20" rx="10" fill="#422006" stroke="#f59e0b" stroke-width="1" />
+      <text x="320" y="28" text-anchor="middle" fill="#fbbf24" font-family="ui-sans-serif, system-ui, sans-serif" font-size="10" font-weight="600">55 / 100</text>
+      <text x="390" y="30" fill="#e2e8f0" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12">₹1,200.00</text>
+      <text x="510" y="30" fill="#e2e8f0" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12">₹1,200.00</text>
+      <text x="630" y="30" fill="#eab308" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12">48h lag</text>
+      <text x="740" y="30" fill="#fef08a" font-family="ui-monospace, monospace" font-size="11">RULE_SETTLEMENT_SLA_BREACH_T2</text>
+      <rect x="1020" y="12" width="76" height="24" rx="6" fill="#334155" />
+      <text x="1058" y="28" text-anchor="middle" fill="#f8fafc" font-family="ui-sans-serif, system-ui, sans-serif" font-size="11">Evidence</text>
+    </g>
+
+    <!-- Row 4: Missing in Bank -->
+    <g transform="translate(0, 186)">
+      <rect x="0" y="0" width="1120" height="48" fill="#1e1b4b" fill-opacity="0.25" />
+      <line x1="0" y1="48" x2="1120" y2="48" stroke="#1e293b" stroke-width="1" />
+      <text x="24" y="30" fill="#f8fafc" font-family="ui-monospace, monospace" font-size="12" font-weight="600">TXN_SYN_104</text>
+      <rect x="140" y="14" width="124" height="20" rx="10" fill="#881337" />
+      <text x="202" y="28" text-anchor="middle" fill="#fda4af" font-family="ui-sans-serif, system-ui, sans-serif" font-size="10" font-weight="700">MISSING_IN_BANK</text>
+      <rect x="290" y="14" width="60" height="20" rx="10" fill="#450a0a" stroke="#ef4444" stroke-width="1" />
+      <text x="320" y="28" text-anchor="middle" fill="#f87171" font-family="ui-sans-serif, system-ui, sans-serif" font-size="10" font-weight="600">90 / 100</text>
+      <text x="390" y="30" fill="#e2e8f0" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12">₹9,500.00</text>
+      <text x="510" y="30" fill="#64748b" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12">[ABSENT]</text>
+      <text x="630" y="30" fill="#f43f5e" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600">₹9,500.00</text>
+      <text x="740" y="30" fill="#fbcfe8" font-family="ui-monospace, monospace" font-size="11">RULE_UNSETTLED_GATEWAY_CAPTURE</text>
+      <rect x="1020" y="12" width="76" height="24" rx="6" fill="#4f46e5" />
+      <text x="1058" y="28" text-anchor="middle" fill="#ffffff" font-family="ui-sans-serif, system-ui, sans-serif" font-size="11">Evidence</text>
+    </g>
+
+    <!-- Bottom Simulation Highlight Box -->
+    <g transform="translate(24, 252)">
+      <rect x="0" y="0" width="1072" height="175" rx="10" fill="#0b1329" stroke="#312e81" stroke-width="1" />
+      <rect x="16" y="14" width="280" height="22" rx="4" fill="#312e81" />
+      <text x="24" y="29" fill="#c7d2fe" font-family="ui-sans-serif, system-ui, sans-serif" font-size="11" font-weight="700">MIROFISH PERSPECTIVE SWARM</text>
+      <rect x="306" y="14" width="260" height="22" rx="4" fill="#1e1b4b" stroke="#4338ca" stroke-width="1" />
+      <text x="436" y="29" text-anchor="middle" fill="#a5b4fc" font-family="ui-sans-serif, system-ui, sans-serif" font-size="10" font-weight="600">AI-SIMULATED SCENARIO • NOT REAL FEEDBACK</text>
+
+      <!-- Customer Dialogue Quote -->
+      <text x="24" y="65" fill="#f8fafc" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="600">👤 Customer Persona (Arjun Sharma, TXN_SYN_102):</text>
+      <text x="24" y="85" fill="#94a3b8" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12">"My credit card shows ₹4,999 deducted for electronic purchase, but the merchant receipt stated ₹4,500."</text>
+
+      <!-- Merchant Dialogue Quote -->
+      <text x="24" y="120" fill="#f8fafc" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="600">🏪 Merchant Persona (QuickMart Retail, TXN_SYN_104):</text>
+      <text x="24" y="140" fill="#94a3b8" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12">"Order was marked delivered, gateway shows captured, yet our bank settlement statement has zero record."</text>
+    </g>
+  </g>
+</svg>

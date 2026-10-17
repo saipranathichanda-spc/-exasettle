@@ -3,7 +3,7 @@ Primary Exasol Personal Analytical Reconciliation Engine.
 Implements PRD Section 9.3 & 9.4:
 - Connects to Exasol Personal via official pyexasol driver
 - Manages Exasol schema and tables
-- Executes core analytical reconciliation query inside Exasol
+- Executes core analytical reconciliation query inside Exasol with CTEs and CASE classification
 - Captures Exasol database version, session ID, and distinct query vs prep timings
 """
 
@@ -19,79 +19,83 @@ from exasettle.core.models import (
 from exasettle.engine.reconciliation_core import resolve_reconciliation_results
 
 EXASOL_RECONCILIATION_SQL = """
-WITH gw_ranked AS (
+WITH gw_agg AS (
     SELECT 
+        transaction_id,
         run_id,
         scenario_id,
-        transaction_id,
-        source_record_id,
-        synthetic_customer_id,
-        synthetic_merchant_id,
-        gateway_reference,
-        bank_reference,
-        amount_paise,
-        fee_paise,
-        currency,
-        event_timestamp_utc,
-        status,
-        reversal_status,
-        ROW_NUMBER() OVER (
-            PARTITION BY transaction_id 
-            ORDER BY event_timestamp_utc ASC, source_record_id ASC
-        ) as rn,
-        COUNT(*) OVER (PARTITION BY transaction_id) as dup_count
+        COUNT(*) as gw_count,
+        SUM(amount_paise) as gw_amount_paise,
+        SUM(fee_paise) as gw_fee_paise,
+        MIN(event_timestamp_utc) as gw_timestamp,
+        MAX(status) as gw_status,
+        MAX(reversal_status) as gw_reversal,
+        GROUP_CONCAT(source_record_id SEPARATOR ', ') as gw_record_ids,
+        GROUP_CONCAT(gateway_reference SEPARATOR ', ') as gw_references,
+        GROUP_CONCAT(bank_reference SEPARATOR ', ') as gw_bank_references
     FROM gateway_records
     WHERE run_id = {run_id:s}
+    GROUP BY transaction_id, run_id, scenario_id
 ),
-bk_ranked AS (
+bk_agg AS (
     SELECT 
+        transaction_id,
         run_id,
         scenario_id,
-        transaction_id,
-        source_record_id,
-        synthetic_customer_id,
-        synthetic_merchant_id,
-        gateway_reference,
-        bank_reference,
-        amount_paise,
-        fee_paise,
-        currency,
-        event_timestamp_utc,
-        settlement_timestamp_utc,
-        status,
-        reversal_status,
-        ROW_NUMBER() OVER (
-            PARTITION BY transaction_id 
-            ORDER BY event_timestamp_utc ASC, source_record_id ASC
-        ) as rn,
-        COUNT(*) OVER (PARTITION BY transaction_id) as dup_count
+        COUNT(*) as bk_count,
+        SUM(amount_paise) as bk_amount_paise,
+        SUM(fee_paise) as bk_fee_paise,
+        MAX(settlement_timestamp_utc) as bk_timestamp,
+        MAX(status) as bk_status,
+        MAX(reversal_status) as bk_reversal,
+        GROUP_CONCAT(source_record_id SEPARATOR ', ') as bk_record_ids,
+        GROUP_CONCAT(gateway_reference SEPARATOR ', ') as bk_gw_references,
+        GROUP_CONCAT(bank_reference SEPARATOR ', ') as bk_references
     FROM bank_records
     WHERE run_id = {run_id:s}
+    GROUP BY transaction_id, run_id, scenario_id
+),
+joined AS (
+    SELECT 
+        COALESCE(gw.transaction_id, bk.transaction_id) as transaction_id,
+        COALESCE(gw.run_id, bk.run_id) as run_id,
+        COALESCE(gw.scenario_id, bk.scenario_id) as scenario_id,
+        COALESCE(gw.gw_count, 0) as gw_count,
+        COALESCE(bk.bk_count, 0) as bk_count,
+        gw.gw_record_ids,
+        bk.bk_record_ids,
+        gw.gw_references,
+        bk.bk_references,
+        gw.gw_bank_references,
+        bk.bk_gw_references,
+        gw.gw_amount_paise,
+        bk.bk_amount_paise,
+        gw.gw_fee_paise,
+        bk.bk_fee_paise,
+        gw.gw_timestamp,
+        bk.bk_timestamp,
+        gw.gw_status,
+        bk.bk_status,
+        gw.gw_reversal
+    FROM gw_agg gw
+    FULL OUTER JOIN bk_agg bk 
+        ON gw.transaction_id = bk.transaction_id
 )
 SELECT 
-    COALESCE(gw.transaction_id, bk.transaction_id) as transaction_id,
-    COALESCE(gw.run_id, bk.run_id) as run_id,
-    COALESCE(gw.scenario_id, bk.scenario_id) as scenario_id,
-    gw.source_record_id as gw_record_id,
-    bk.source_record_id as bk_record_id,
-    gw.amount_paise as gw_amount_paise,
-    bk.amount_paise as bk_amount_paise,
-    gw.fee_paise as gw_fee_paise,
-    bk.fee_paise as bk_fee_paise,
-    gw.status as gw_status,
-    bk.status as bk_status,
-    gw.reversal_status as gw_reversal,
-    bk.reversal_status as bk_reversal,
-    gw.event_timestamp_utc as gw_timestamp,
-    bk.settlement_timestamp_utc as bk_timestamp,
-    COALESCE(gw.dup_count, 0) as gw_dup_count,
-    COALESCE(bk.dup_count, 0) as bk_dup_count,
-    COALESCE(gw.rn, bk.rn) as rn
-FROM gw_ranked gw
-FULL OUTER JOIN bk_ranked bk 
-    ON gw.transaction_id = bk.transaction_id 
-    AND gw.rn = bk.rn
-ORDER BY transaction_id ASC, rn ASC
+    *,
+    CASE 
+        WHEN gw_count > 1 OR bk_count > 1 THEN 'DUPLICATE'
+        WHEN gw_count > 0 AND bk_count = 0 THEN 'MISSING_IN_BANK'
+        WHEN gw_count = 0 AND bk_count > 0 THEN 'MISSING_IN_GATEWAY'
+        WHEN (gw_status = 'REVERSED' AND bk_status = 'SETTLED') OR (gw_reversal IS NOT NULL AND gw_reversal != 'NONE') THEN 'AMBIGUOUS_REVIEW'
+        WHEN gw_amount_paise != bk_amount_paise THEN 'AMOUNT_MISMATCH'
+        WHEN gw_fee_paise != bk_fee_paise THEN 'FEE_VARIANCE_MDR'
+        ELSE 'CANDIDATE_MATCH'
+    END as preliminary_sql_classification,
+    ABS(COALESCE(gw_amount_paise, 0) - COALESCE(bk_amount_paise, 0)) as diff_amount_paise,
+    ABS(COALESCE(gw_fee_paise, 0) - COALESCE(bk_fee_paise, 0)) as diff_fee_paise
+FROM joined
+ORDER BY transaction_id ASC
 """
 
 
@@ -222,7 +226,6 @@ class ExasolReconciler:
             t_query_start = time.perf_counter()
             stmt = con.execute(EXASOL_RECONCILIATION_SQL, {"run_id": run_id})
             raw_rows = stmt.fetchall()
-            # Convert tuples to dict using column names
             col_names = [col["name"].lower() for col in stmt.columns()]
             dict_rows = [dict(zip(col_names, row)) for row in raw_rows]
             query_time_ms = round((time.perf_counter() - t_query_start) * 1000, 3)
@@ -249,7 +252,7 @@ class ExasolReconciler:
             "is_fallback": False,
             "database_version": version_str,
             "session_id": str(session_id),
-            "sql_query_type": "CTE_WINDOW_FULL_OUTER_JOIN",
+            "sql_query_type": "EXASOL_CTE_AGGREGATION_FULL_OUTER_JOIN",
             "timings_ms": {
                 "prep_time_ms": prep_time_ms,
                 "load_time_ms": load_time_ms,
@@ -259,7 +262,8 @@ class ExasolReconciler:
             "counts": {
                 "gateway_rows": len(gateway_records),
                 "bank_rows": len(bank_records),
-                "reconciled_results": len(results)
+                "physical_source_rows": len(gateway_records) + len(bank_records),
+                "logical_transactions_reconciled": len(results)
             }
         }
 

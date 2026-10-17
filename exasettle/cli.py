@@ -128,11 +128,11 @@ def main():
     run_p.add_argument("--seed", type=int, default=42, help="Deterministic seed")
     run_p.add_argument("--threshold", type=float, default=24.0, help="Settlement delay threshold hours")
     run_p.add_argument("--engine", default="AUTO", choices=["AUTO", "EXASOL", "FALLBACK"], help="Engine preference")
-    run_p.add_argument("--sim", default="AUTO", choices=["AUTO", "PRERECORDED", "LIVE", "BLOCKED"], help="Simulation mode")
+    run_p.add_argument("--sim", default="AUTO", choices=["AUTO", "TRUE_MIROFISH", "DIRECT_LLM_ROLEPLAY", "PRERECORDED", "LIVE", "BLOCKED"], help="Simulation mode")
 
     # server
     srv_p = subparsers.add_parser("server", help="Launch live web dashboard")
-    srv_p.add_argument("--host", default="0.0.0.0", help="Host binding")
+    srv_p.add_argument("--host", default="127.0.0.1", help="Host binding (loopback default for security)")
     srv_p.add_argument("--port", type=int, default=8000, help="Port binding")
 
     args = parser.parse_args()

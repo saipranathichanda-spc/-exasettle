@@ -1,204 +1,71 @@
-# ExaSettle Change & Verification Report
+# ExaSettle Change and Verification Report
 
-**Competition**: ExaThon India 2026 — The Exasol Open Build Challenge  
-**Track**: Track 01 — Money, Risk & Regulation  
-**Project**: ExaSettle (v2.0)  
-**Tagline**: *Reconcile Faster. Explain Every Exception.*  
-**Status**: APPROVED STAGE-GATED PROTOTYPE DELIVERY  
-**Final Verdict**: **VERIFIED COMPLETE** (All MVP Gates G0–G8 Passed with Honest Attribution)
+- Report date/time and timezone: 2026-10-17T11:00:00+05:30 (IST)
+- Repository/branch: https://github.com/saipranathichanda-spc/-exasettle / main
+- Starting commit: b4d8a42
+- Final local commit (if any; do not commit unless separately authorized): b4d8a42 (local modifications uncommitted per Rule 9)
+- Worktree status: 14 files modified, 3 untracked files (.github/, exasettle.egg-info/, requirements.txt)
+- Python/runtime and key dependency versions: Python 3.14.7 (win32), pytest 9.1.1, pyexasol 1.0.0, fastapi 0.135.1, pydantic 2.13.1, anyio 4.15.1, uvicorn 0.44.0, openai 2.29.0
 
----
+## Executive status
+- Overall: PARTIAL
+- One-sentence factual summary: Stage gates G0–G8 software architecture, logical transaction reconciliation, persona prompt isolation, dashboard security hardening, and automated test suites are fully verified with 37 passing tests, while live Exasol and True MiroFish workflows remain honestly attributed as BLOCKED/OFFLINE due to unprovisioned local host container services.
 
-## 1. Summary of Implemented Changes & Modules
+## Gate results
+| Gate | Status | Command/evidence | Result/limitations |
+|---|---|---|---|
+| G0 Baseline | PASS | `git status`, `git submodule status` | Branch main verified at commit b4d8a42; vendor/MiroFish submodule pinned to 7657031ac01184afe2cb220f5ee3545573b5e843; existing worktree preserved. |
+| G1 Clean install/tests | PASS | `pip install -e .` & `pytest --collect-only` | Fixed missing `Tuple` import in `mirofish_connector.py`; configured setuptools package discovery in `pyproject.toml` (excluding vendor/reports/tests); added `requirements.txt` and `.github/workflows/ci.yml`. 38 tests collected. |
+| G2 Synthetic data | PASS | `pytest -v tests/test_g2_generator.py` | 5 passed. Strict integer paise fixed-precision math, deterministic seed reproducibility, 8 planted known-answer cases, independent ground truth, persistent synthetic disclosure badges. |
+| G3 Reconciliation/Exasol | PARTIAL | `pytest -v tests/test_g3_reconciliation.py` | 5 passed, 1 skipped. Overhauled reconciliation to produce exactly 1 result per logical transaction via CTE aggregation and SQL CASE classification (eliminating dictionary row overwrite). Adversarial edge cases verified. Live Exasol integration honestly SKIPPED (Exasol container offline on port 8563). |
+| G4 MiroFish/simulation | PARTIAL | `pytest -v tests/test_g4_mirofish.py` | 7 passed. Section 10 prompt template conforms with ground-truth isolation verified (persona prompts never receive expected answer). Honest separation of `TRUE_MIROFISH`, `DIRECT_LLM_ROLEPLAY`, and `PRERECORDED`. True MiroFish marked BLOCKED; direct LLM role-play and prerecorded dialogue operational. |
+| G5 Dashboard/security | PASS | `pytest -v tests/test_g5_dashboard.py` | 6 passed. Hardened dashboard server to loopback `127.0.0.1`, removed wildcard CORS, bounded SSE queues (`maxsize=100`), added concurrency lock, and enforced visible HTTP 503 failure on explicit Exasol mode (no silent fallback). |
+| G6 Audit/exports | PASS | `pytest -v tests/test_g6_export_security.py` | 3 passed. Tamper-evident SHA-256 hash chains, RFC-4180 CSV export, and comprehensive JSON summary verified with zero credential leakage. |
+| G7 E2E/regression | PASS | `pytest -v tests/test_g7_e2e.py` | 1 passed. Full end-to-end journey verified with 100% diagonal accuracy on ground truth confusion matrix; zero secret leaks in exports or tracked files. |
+| G8 Submission/docs | PASS | `pytest -v tests/test_g8_regression.py` | 3 passed. README.md, RUNBOOK.md, and CHANGE_REPORT.md updated with accurate evaluator run instructions, honest engine modes, and clear licensing boundaries (MIT vs AGPL-3.0). |
 
-The ExaSettle repository was established from scratch as a clean, deterministic settlement-reconciliation platform integrating analytical database queries with multi-agent simulation.
+## Files changed
+- `exasettle/core/models.py`: Added logical transaction aggregation fields (`gateway_rows_count`, `bank_rows_count`, `gateway_record_ids`, `bank_record_ids`, `source_row_anomalies`).
+- `exasettle/engine/reconciliation_core.py`: Rewrote `RECONCILIATION_SQL` with CTE aggregation, full outer join, and in-database SQL classification; restored `classify_matched_row` for modular testing.
+- `exasettle/engine/exasol_reconciler.py`: Implemented matching Exasol CTE aggregation and database-side SQL classification.
+- `exasettle/simulation/prompt_templates.py`: Isolated ground-truth answer from persona prompt template so personas evaluate evidence without knowing expected outcome.
+- `exasettle/simulation/mirofish_connector.py`: Separated `TRUE_MIROFISH`, `DIRECT_LLM_ROLEPLAY`, and `PRERECORDED` modes; ensured provider errors produce `FAILED` or `PARTIAL`, never successful `LIVE`; optimized fast-path for prerecorded mode.
+- `exasettle/core/config.py`: Changed default `APP_HOST` to `127.0.0.1`; enhanced `check_model_api` to separate `CONFIGURED`, `REACHABLE`, and `FUNCTIONAL` states.
+- `exasettle/dashboard/app.py`: Hardened CORS origins to local addresses; implemented bounded SSE queues; added single-process execution lock; enforced visible HTTP 503 failure on explicit Exasol mode (no silent fallback).
+- `exasettle/cli.py`: Changed default server host to `127.0.0.1` and added new simulation modes.
+- `pyproject.toml`: Fixed package discovery and added `openai>=1.0.0` dependency.
+- `.github/workflows/ci.yml`: Added multi-version GitHub Actions CI test workflow.
+- `requirements.txt`: Created clean dependency declaration file.
+- `tests/test_g3_reconciliation.py`: Added adversarial reconciliation tests (single-side duplicates, missing rows, logical transaction count integrity).
+- `tests/test_g4_mirofish.py`: Added tests for prompt isolation, honest simulation label separation, and provider failure handling.
+- `tests/test_g5_dashboard.py`: Added tests for explicit Exasol failure (Rule 4), CORS preflight, and bounded SSE queues.
+- `tests/test_g8_regression.py`: Updated secret leakage test to verify `.env` is gitignored and untracked, complying with Rule 6.
+- `frontend/`: Complete modern React 18, Vite, Tailwind CSS, TypeScript, and shadcn component tree (`frontend/src/components/ui/hero-section-dark.tsx`, `frontend/src/components/blocks/demo.tsx`, `frontend/src/App.tsx`).
+- `exasettle/dashboard/static/`: Production Vite build assets serving the integrated HeroSection and live interactive reconciliation dashboard.
+- `README.md` & `RUNBOOK.md`: Updated documentation with accurate Python version notes, loopback bindings, frontend build instructions, and submission checklist.
 
-### Core Modules Implemented:
-1. **`exasettle.core`**:
-   - `models.py`: Pydantic schema enforcing PRD Section 12 data model (`LedgerRecord`, `GroundTruthRecord`, `ReconciliationResult`, `SimulationEvent`, `ServiceHealth`, `PreflightSummary`).
-   - `money.py`: Strict fixed-precision integer paise arithmetic (1 INR = 100 paise) preventing IEEE-754 floating-point errors.
-   - `config.py`: Environment management (`Settings`), secret redaction (`mask_secret`), and preflight checkers for Exasol, MiroFish, LLM provider, and Zep Cloud.
-2. **`exasettle.generator`**:
-   - `dataset_generator.py`: Deterministic seed-driven synthetic data generator creating fictional customer/merchant identities and planting all 8 required known-answer cases with independent ground truth and SHA-256 tamper-evident hashes.
-3. **`exasettle.engine`**:
-   - `reconciliation_core.py`: ANSI SQL query using CTEs, `ROW_NUMBER()` tie-breaking, and `FULL OUTER JOIN`, plus classification resolution logic.
-   - `fallback_reconciler.py`: Local deterministic engine executing the exact CTE/Window SQL in SQLite 3.50.4, transparently attributed.
-   - `exasol_reconciler.py`: Primary analytical engine connecting via `pyexasol`, creating schema tables, bulk importing, executing CTE reconciliation query inside Exasol, and capturing session and version metadata.
-   - `priority_score.py`: Explainable mathematical triage priority score (0–100) with documented factor breakdown.
-4. **`exasettle.simulation`**:
-   - `prompt_templates.py`: Conformance to PRD Section 10 prompt template.
-   - `prerecorded_store.py`: High-fidelity offline scenario reactions for Customer, Merchant, and Gateway actors with persistent simulation disclosure.
-   - `mirofish_connector.py`: Controlled adapter connecting to pinned MiroFish revision, preserving strict architectural truth boundaries (agents cannot mutate financial truth).
-5. **`exasettle.audit`**:
-   - `logger.py`: Append-oriented audit logger computing SHA-256 tamper-evident hash chains.
-   - `exporter.py`: RFC-4180 CSV export and comprehensive JSON report generator with zero secret leakage.
-6. **`exasettle.dashboard`**:
-   - `app.py`: FastAPI server with REST APIs, Server-Sent Events (SSE) live updates, and static file serving.
-   - `static/index.html`, `style.css`, `app.js`: Interactive, responsive, accessible web dashboard featuring real-time health badges, execution stepper, financial KPIs, evidence drill-down drawer, simulation panel, and charts.
-7. **`exasettle.cli`**:
-   - Standalone CLI supporting `preflight`, `run`, and `server` commands with cross-platform UTF-8 console output.
-8. **`tests/`**:
-   - 9 test suites covering G0 through G8 (`test_g0_discovery.py` to `test_g8_regression.py`).
+## Test evidence
+- Exact test command: `pytest -v -rs`
+- Actual output: `37 passed, 1 skipped, 7 warnings in 26.35s`
+- Skips: `test_exasol_personal_integration_or_explicit_skip` SKIPPED with honest attribution: `Exasol Personal service unreachable at localhost:8563: [WinError 10061] No connection could be made because the target machine actively refused it`.
+- Failures: 0 failures across all gate tests.
+- Fallback vs Live test separation: Fallback tests run deterministically via SQLite CTE and prerecorded simulation; live Exasol and True MiroFish tests check real network connectivity and skip or fail visibly without fabricating results.
 
----
+## External services
+- Exasol: BLOCKED/OFFLINE — Docker container is not running on localhost:8563. PyExasol connection actively refused.
+- MiroFish: BLOCKED/OFFLINE — MiroFish microservice at http://localhost:5001 is offline. Submodule is pinned at commit 7657031ac01184afe2cb220f5ee3545573b5e843 in vendor/MiroFish.
+- Model provider/Zep: CONFIGURED — LLM_API_KEY is configured in private local .env (Google AI Studio Gemini endpoint, masked as AQ....RYQ); ZEP_API_KEY is unconfigured.
 
-## 2. Architecture & Data-Flow Summary
+## Remaining blockers and risks
+- Docker Desktop WSL backend is absent on the host Windows machine (`wsl --status` confirmed WSL is not installed), preventing the local `exasol/docker-db:latest` container from running. Consequence: Exasol live integration remains BLOCKED; local fallback engine must be used for demonstrations. Next action: Install WSL 2 and start Exasol Personal container via `docker run -d --name exasoldb -p 8563:8563 exasol/docker-db:latest`.
+- Upstream MiroFish service requires running `python vendor/MiroFish/backend/run.py` on port 5001 with Zep Cloud and LLM credentials. Consequence: True MiroFish multi-agent graph remains BLOCKED; Direct LLM Roleplay or Prerecorded dialogue is used. Next action: Launch MiroFish service when full multi-agent simulation is required.
 
-```
-                                      +------------------------------------+
-                                      |     Synthetic Seed & Generator     |
-                                      +------------------------------------+
-                                                        |
-                                                        v
-                                      +------------------------------------+
-                                      | Gateway & Bank Synthetic Records   |
-                                      |   (Independent Ground Truth)       |
-                                      +------------------------------------+
-                                                        |
-                                                        v
-                         +-------------------------------------------------------------+
-                         |           Reconciliation Engine (Deterministic SQL)         |
-                         |   - CTE Window Functions: ROW_NUMBER()                      |
-                         |   - FULL OUTER JOIN (No Many-to-Many Expansion)             |
-                         |   - Primary: Exasol Personal | Fallback: Local Relational   |
-                         +-------------------------------------------------------------+
-                                                        |
-                                                        v
-                         +-------------------------------------------------------------+
-                         |      Reconciliation Results & Operational Triage Score      |
-                         |   (MATCHED, FEE_VARIANCE, AMOUNT_MISMATCH, MISSING, etc.)   |
-                         +-------------------------------------------------------------+
-                                       /                               \
-                                      /                                 \
-                                     v                                   v
-             +----------------------------------+       +----------------------------------+
-             |    Deterministic Financial Truth  |       |   MiroFish Multi-Agent World     |
-             |  - 100% Ground Truth Accuracy    |       |  - Customer / Merchant / Gateway |
-             |  - Exact Integer Paise Precision |       |  - Strict Isolation Boundary     |
-             |  - Audit SHA-256 Hash Chains     |       |  - Persistent Simulation Label   |
-             +----------------------------------+       +----------------------------------+
-                                     \                                   /
-                                      \                                 /
-                                       v                               v
-                         +-------------------------------------------------------------+
-                         |            Live Dashboard & Tamper-Evident Exporters        |
-                         |   - Financial Panel vs Simulated Feedback Panel (Separate)  |
-                         |   - Deep Evidence Drawer & Mathematical Score Breakdown     |
-                         |   - Downloadable CSV / JSON Audit Packages                  |
-                         +-------------------------------------------------------------+
-```
+## Track 01 submission checklist
+- Exasol evidence: Analytical SQL CTE aggregation and CASE classification query implemented in `exasettle/engine/exasol_reconciler.py` and `reconciliation_core.py`. Verified via local SQLite CTE engine; live Exasol integration tested with honest skip when offline.
+- Public repo/README/run instructions: Available at https://github.com/saipranathichanda-spc/-exasettle with complete README.md, RUNBOOK.md, and quickstart commands.
+- License/third-party notices: ExaSettle MIT license in `LICENSE`; MiroFish GNU AGPL-3.0 in `vendor/MiroFish/LICENSE` and `NOTICE.md`.
+- Pitch deck: To be attached by team prior to final submission.
+- Demo video (maximum 3 minutes): Runbook walkthrough script prepared in `README.md` and `RUNBOOK.md` for recording.
 
-### Architectural Separation of Concerns:
-- **Transaction Evidence**: Deterministic rows, amounts, fees, and SQL matching logic.
-- **MiroFish Simulation**: Generates behavioral feedback and perspectives for synthetic personas. Simulation output **cannot modify** ledger rows, ground truth, or financial classifications.
-
----
-
-## 3. MiroFish Repository, Revision & Backend Details
-
-- **Repository URL**: `https://github.com/666ghj/MiroFish`
-- **Pinned Git Revision**: Commit `7657031ac01184afe2cb220f5ee3545573b5e843`
-- **License**: GNU Affero General Public License v3.0 (AGPL-3.0) — *retained verbatim in `vendor/MiroFish/LICENSE` and acknowledged in `NOTICE.md`*.
-- **Verified Integration Interface**: REST/JSON microservice interface and direct OpenAI-compatible SDK invocation with Section 10 prompt template.
-- **Configured Memory/Graph Backend**: Zep Cloud (`zep-cloud==3.25.0`). As verified in `vendor/MiroFish/backend/app/config.py`, MiroFish exclusively supports Zep Cloud (`ZEP_API_KEY`) and explicitly disallows local endpoints (`ZEP_API_URL`).
-
----
-
-## 4. Actual Environment & Dependency Health Status
-
-*(Variable names listed only; secret values are strictly masked/redacted per PRD Section 13)*
-
-| Component | Status | Config Variable Names | Notes / Details |
-| :--- | :--- | :--- | :--- |
-| **ExaSettle Orchestrator** | **ONLINE** | `APP_HOST`, `APP_PORT`, `APP_DEBUG` | FastAPI server listening on `0.0.0.0:8000` |
-| **Exasol Personal** | **NOT_CONFIGURED** | `EXASOL_HOST`, `EXASOL_PORT`, `EXASOL_USER`, `EXASOL_PASSWORD`, `EXASOL_SCHEMA`, `EXASOL_ENCRYPTION` | Database password unset in local testbed. Local deterministic fallback engine active. |
-| **MiroFish Microservice** | **BLOCKED** | `MIROFISH_SERVICE_URL` | Local vendor repository checked out; blocked from live network execution due to unconfigured keys. PRERECORDED simulation mode active. |
-| **LLM Provider API** | **NOT_CONFIGURED** | `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL_NAME` | Unset in local environment. |
-| **Zep Cloud Memory Graph** | **NOT_CONFIGURED** | `ZEP_API_KEY` | Unset in local environment. |
-
----
-
-## 5. Stage Gate Verification Table (G0 through G8)
-
-| Gate | Stage | Verification Command | Result | Evidence / Artifact Path | Initial Failure / Fix / Retest |
-| :---: | :--- | :--- | :---: | :--- | :--- |
-| **G0** | Repository & Dependency Discovery | `pytest tests/test_g0_discovery.py` | **PASS** | `vendor/MiroFish/` (`7657031`), `LICENSE`, `NOTICE.md` | None. 3 passed cleanly. |
-| **G1** | Architecture & Preflight | `pytest tests/test_g1_preflight.py` | **PASS** | `exasettle/core/config.py`, `exasettle/core/money.py` | Initial failure: Decimal vs float comparison & negative currency format. Fixed in `money.py` & retested. 4 passed. |
-| **G2** | Synthetic Data & Known Answers | `pytest tests/test_g2_generator.py` | **PASS** | `exasettle/generator/dataset_generator.py` | None. 5 passed cleanly (all 8 cases planted). |
-| **G3** | Exasol Reconciliation Core | `pytest tests/test_g3_reconciliation.py -v -rs` | **PASS** | `exasettle/engine/reconciliation_core.py`, `exasettle/engine/fallback_reconciler.py` | Initial failure: duplicate check was evaluated after missing side. Reordered duplicate check before missing side in CTE join. Retested: 3 passed, 1 honest skip for live Exasol. |
-| **G4** | MiroFish Integration | `pytest tests/test_g4_mirofish.py` | **PASS** | `exasettle/simulation/mirofish_connector.py`, `prompt_templates.py` | None. 5 passed cleanly (truth boundary proven). |
-| **G5** | Dashboard & Live Events | `pytest tests/test_g5_dashboard.py` | **PASS** | `exasettle/dashboard/app.py`, `static/index.html`, `app.js` | None. 3 passed cleanly. |
-| **G6** | Export, Audit & Security | `pytest tests/test_g6_export_security.py` | **PASS** | `exasettle/audit/logger.py`, `exasettle/audit/exporter.py` | Initial failure: Windows `\r\n` line ending in CSV test. Fixed using `splitlines()` & retested. 3 passed. |
-| **G7** | Full End-to-End Demo | `pytest tests/test_g7_e2e.py` | **PASS** | `tests/test_g7_e2e.py`, `reports/summary_e2e_verified_demo_pack.json` | Initial record count asserted 16 instead of 15 (8 cases). Updated count to 15. Retested: 1 passed. |
-| **G8** | Final Regression & Handoff | `pytest tests/test_g8_regression.py` | **PASS** | `tests/test_g8_regression.py`, `CHANGE_REPORT.md`, `README.md` | Initial Windows cp1252 console unicode error in CLI. Added UTF-8 reconfiguration. Retested: 3 passed. |
-
----
-
-## 6. Test Suite Execution Summary
-
-- **Total Tests Executed**: 31
-- **Passed**: 30
-- **Failed**: 0
-- **Skipped**: 1 (`tests/test_g3_reconciliation.py::test_exasol_personal_integration_or_explicit_skip`)
-  - *Reason for Skip*: `EXASOL_PASSWORD` is unset in the local execution environment. In strict adherence to PRD Section 9.8, Exasol tests are not mocked or faked as passing when the database service is unavailable.
-- **Mocked Tests**: 0
-- **Not Run**: 0
-
----
-
-## 7. End-to-End Demo Run Evidence
-
-- **Run ID**: `e2e_verified_demo_pack`
-- **Scenario ID**: `SCN_CORE_8PACK`
-- **Deterministic Seed**: `42`
-- **Cumulative Dataset Hash (SHA-256)**: `27a14b7a703b5073723607dcded0bfdc5d3ed8b61d20800b3f6ed5038eda0ecd`
-- **Active Engine Mode**: `LOCAL_FALLBACK` (`LOCAL_SQLITE_ENGINE_v3.50.4`)
-- **Query / Execution Timings**:
-  - `prep_time_ms`: 0.089 ms
-  - `load_time_ms`: 0.761 ms
-  - `query_time_ms`: 0.426 ms
-  - `total_time_ms`: 1.276 ms
-- **Actual Classification Counts (100% Precision on Known Answers)**:
-  - `MATCHED`: 1
-  - `FEE_VARIANCE_MDR`: 1
-  - `AMOUNT_MISMATCH`: 1
-  - `MISSING_IN_BANK`: 1
-  - `MISSING_IN_GATEWAY`: 1
-  - `DUPLICATE`: 2 (both submission copies flagged)
-  - `SETTLEMENT_DELAY`: 1
-  - `AMBIGUOUS_REVIEW`: 1
-  - **Total Results**: 9
-- **Ground Truth Validation**: 8/8 evaluated cases validated correct (100.0% accuracy).
-- **MiroFish Simulation Output**: 27 participant perspectives generated across Customer, Merchant, and Gateway roles.
-- **Generated Report Paths**:
-  - CSV Export: `reports/reconciliation_e2e_verified_demo_pack.csv`
-  - JSON Summary: `reports/summary_e2e_verified_demo_pack.json`
-
----
-
-## 8. Statement of Live vs. Prerecorded Integrations
-
-- **Reconciliation Engine**: **LIVE EXECUTION**. The full SQL query with CTEs, `ROW_NUMBER()`, and `FULL OUTER JOIN` executed live on the in-memory relational engine. When Exasol credentials are supplied, it executes live on Exasol Personal.
-- **MiroFish Agent Simulation**: **PRERECORDED / CONTROLLED OFFLINE EXECUTION**. Because `LLM_API_KEY` and `ZEP_API_KEY` were not configured in this environment, simulation ran in transparent `PRERECORDED` mode. All outputs carry the mandatory disclosure: `AI-simulated scenario — not real customer feedback`. No synthetic outputs are falsely described as live LLM calls.
-
----
-
-## 9. Known Limitations, Blockers & Operator Action Items
-
-1. **Exasol Personal Container**:
-   - Docker was not installed on this Windows environment.
-   - *Operator Action*: Install Docker Desktop, run `docker run --name exasoldb -p 8563:8563 -d exasol/docker-db:latest`, and set `EXASOL_PASSWORD` in your private `.env` to enable live Exasol execution.
-2. **MiroFish Zep Cloud Dependency**:
-   - MiroFish code explicitly requires Zep Cloud for long-term agent memory.
-   - *Operator Action*: Sign up at `https://app.getzep.com/`, obtain `ZEP_API_KEY`, and add it to `.env` along with `LLM_API_KEY` to switch simulation from `PRERECORDED` to `LIVE`.
-3. **Single-User Development Boundary**:
-   - Exasol Personal is a single-user analytical edition. It is not architected as a multi-user public government service.
-4. **No Money Movement**:
-   - ExaSettle is a reconciliation analytics and explanation engine; it does not authorize, transfer, or reverse actual funds.
-
----
-
-## 10. Final Verdict
-
-**VERIFIED COMPLETE**  
-All mandatory MVP gates (G0 through G8) have been fully implemented, verified, and audited with zero test failures and full attribution.
+## Final verdict
+State only what the evidence supports. Overall verdict is PARTIAL. All software gates, reconciliation logic, prompt isolation, security hardening, and test suites are verified complete and correct. Live external Exasol and True MiroFish services remain unprovisioned on the testbed and are reported honestly as BLOCKED/OFFLINE without silent fallback or manufactured passes.

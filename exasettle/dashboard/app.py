@@ -46,15 +46,21 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://127.0.0.1:8000",
+        "http://localhost:8000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3000"
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
-# In-memory run store
+# In-memory run store (Single-process volatile local cache — not durable storage)
 runs_cache: Dict[str, Dict[str, Any]] = {}
 active_subscribers: List[asyncio.Queue] = []
+run_execution_lock = asyncio.Lock()
 
 
 class RunRequest(BaseModel):
@@ -63,18 +69,21 @@ class RunRequest(BaseModel):
     extra_matched_count: int = 0
     settlement_delay_threshold_hours: int = 24
     engine_preference: str = "AUTO"  # AUTO, EXASOL, FALLBACK
-    simulation_mode: str = "AUTO"    # AUTO, LIVE, PRERECORDED, BLOCKED
+    simulation_mode: str = "AUTO"    # AUTO, TRUE_MIROFISH, DIRECT_LLM_ROLEPLAY, PRERECORDED, BLOCKED
 
 
 async def emit_event(event_type: str, data: Dict[str, Any]):
-    """Broadcast SSE event to connected dashboard clients."""
+    """Broadcast SSE event to connected dashboard clients using bounded queues."""
     payload = {
         "event_type": event_type,
         "timestamp_utc": datetime.now(timezone.utc).isoformat(),
         "data": data
     }
-    for q in active_subscribers:
-        await q.put(payload)
+    for q in list(active_subscribers):
+        try:
+            q.put_nowait(payload)
+        except asyncio.QueueFull:
+            pass  # Drop if client queue is saturated to protect server responsiveness
 
 
 @app.get("/api/health")
@@ -85,54 +94,92 @@ def get_service_health():
 
 @app.post("/api/run")
 async def execute_run(req: RunRequest):
-    """Execute end-to-end reconciliation run with real event streaming."""
-    run_id = f"run_{int(time.time())}_{req.seed}"
-    await emit_event("RUN_INITIALIZING", {"run_id": run_id, "scenario_id": req.scenario_id, "seed": req.seed})
+    """Execute end-to-end reconciliation run with real event streaming and strict engine boundaries."""
+    async with run_execution_lock:
+        run_id = f"run_{int(time.time())}_{req.seed}"
+        await emit_event("RUN_INITIALIZING", {"run_id": run_id, "scenario_id": req.scenario_id, "seed": req.seed})
 
-    # Step 1: Generate synthetic dataset
-    await emit_event("STATUS_TRANSITION", {"stage": "SCENARIO_CREATED", "message": "Creating synthetic scenario..."})
-    pkg: SyntheticDatasetPackage = generate_synthetic_dataset(
-        run_id=run_id,
-        scenario_id=req.scenario_id,
-        seed=req.seed,
-        extra_matched_count=req.extra_matched_count,
-        settlement_delay_threshold_hours=req.settlement_delay_threshold_hours
-    )
-    global_audit_store.record_event(
-        run_id, req.scenario_id, "DATASET_GENERATED", "SUCCESS", "PYTHON_RNG",
-        {"dataset_hash": pkg.dataset_hash, "records_count": pkg.total_records}
-    )
-    await emit_event("STATUS_TRANSITION", {
-        "stage": "SOURCE_RECORDS_GENERATED",
-        "message": f"Generated {pkg.total_records} synthetic records ({len(pkg.gateway_records)} gateway, {len(pkg.bank_records)} bank)",
-        "dataset_hash": pkg.dataset_hash
-    })
+        # Step 1: Generate synthetic dataset
+        await emit_event("STATUS_TRANSITION", {"stage": "SCENARIO_CREATED", "message": "Creating synthetic scenario..."})
+        pkg: SyntheticDatasetPackage = generate_synthetic_dataset(
+            run_id=run_id,
+            scenario_id=req.scenario_id,
+            seed=req.seed,
+            extra_matched_count=req.extra_matched_count,
+            settlement_delay_threshold_hours=req.settlement_delay_threshold_hours
+        )
+        global_audit_store.record_event(
+            run_id, req.scenario_id, "DATASET_GENERATED", "SUCCESS", "PYTHON_RNG",
+            {"dataset_hash": pkg.dataset_hash, "records_count": pkg.total_records}
+        )
+        await emit_event("STATUS_TRANSITION", {
+            "stage": "SOURCE_RECORDS_GENERATED",
+            "message": f"Generated {pkg.total_records} synthetic records ({len(pkg.gateway_records)} gateway, {len(pkg.bank_records)} bank)",
+            "dataset_hash": pkg.dataset_hash
+        })
 
-    # Step 2: Ingest & Reconcile
-    await emit_event("STATUS_TRANSITION", {"stage": "RECORDS_LOADING", "message": "Staging records in analytical database..."})
-    use_exasol = False
-    if req.engine_preference == "EXASOL":
-        use_exasol = True
-    elif req.engine_preference == "AUTO":
-        # Check if Exasol is available
-        preflight = run_preflight()
-        use_exasol = preflight.ready_for_exasol
+        # Step 2: Ingest & Reconcile
+        await emit_event("STATUS_TRANSITION", {"stage": "RECORDS_LOADING", "message": "Staging records in analytical database..."})
+        results: List[ReconciliationResult] = []
+        engine_metrics: Dict[str, Any] = {}
 
-    results: List[ReconciliationResult] = []
-    engine_metrics: Dict[str, Any] = {}
-    if use_exasol:
-        try:
-            exasol_engine = ExasolReconciler()
-            await emit_event("STATUS_TRANSITION", {"stage": "RECONCILIATION_RUNNING", "message": "Executing CTE analytical SQL on Exasol Personal..."})
-            results, engine_metrics = exasol_engine.reconcile(
-                pkg.gateway_records,
-                pkg.bank_records,
-                pkg.ground_truth,
-                settlement_delay_threshold_hours=req.settlement_delay_threshold_hours
-            )
-        except Exception as e:
-            # Fallback gracefully and notify client transparently
+        if req.engine_preference == "EXASOL":
+            # Explicit Exasol requested: must fail visibly if Exasol cannot be used (Non-negotiable rule 4)
+            try:
+                exasol_engine = ExasolReconciler()
+                await emit_event("STATUS_TRANSITION", {"stage": "RECONCILIATION_RUNNING", "message": "Executing CTE analytical SQL on Exasol Personal..."})
+                results, engine_metrics = exasol_engine.reconcile(
+                    pkg.gateway_records,
+                    pkg.bank_records,
+                    pkg.ground_truth,
+                    settlement_delay_threshold_hours=req.settlement_delay_threshold_hours
+                )
+            except Exception as e:
+                global_audit_store.record_event(
+                    run_id, req.scenario_id, "EXASOL_RECONCILIATION_FAILED", "FAILED", "EXASOL_PERSONAL",
+                    {"error": str(e)}
+                )
+                await emit_event("STATUS_TRANSITION", {
+                    "stage": "ERROR",
+                    "message": f"Exasol reconciliation failed: {type(e).__name__} - {str(e)[:120]}"
+                })
+                raise HTTPException(
+                    status_code=503,
+                    detail=f"Exasol engine failure (engine_preference='EXASOL'): {type(e).__name__} - {str(e)[:140]}. Silent fallback is forbidden under working rules."
+                )
+        elif req.engine_preference == "AUTO":
+            preflight = run_preflight()
+            if preflight.ready_for_exasol:
+                try:
+                    exasol_engine = ExasolReconciler()
+                    results, engine_metrics = exasol_engine.reconcile(
+                        pkg.gateway_records,
+                        pkg.bank_records,
+                        pkg.ground_truth,
+                        settlement_delay_threshold_hours=req.settlement_delay_threshold_hours
+                    )
+                except Exception as e:
+                    local_engine = LocalFallbackReconciler()
+                    results, engine_metrics = local_engine.reconcile(
+                        pkg.gateway_records,
+                        pkg.bank_records,
+                        pkg.ground_truth,
+                        settlement_delay_threshold_hours=req.settlement_delay_threshold_hours
+                    )
+                    engine_metrics["engine_mode"] = "LOCAL_FALLBACK"
+                    engine_metrics["notice"] = f"Exasol container at localhost:8563 is offline ({type(e).__name__}). Automatically executed on Local Deterministic Fallback Engine."
+            else:
+                local_engine = LocalFallbackReconciler()
+                results, engine_metrics = local_engine.reconcile(
+                    pkg.gateway_records,
+                    pkg.bank_records,
+                    pkg.ground_truth,
+                    settlement_delay_threshold_hours=req.settlement_delay_threshold_hours
+                )
+                engine_metrics["engine_mode"] = "LOCAL_FALLBACK"
+        else:  # FALLBACK
             local_engine = LocalFallbackReconciler()
+            await emit_event("STATUS_TRANSITION", {"stage": "RECONCILIATION_RUNNING", "message": "Executing deterministic SQL on local fallback engine..."})
             results, engine_metrics = local_engine.reconcile(
                 pkg.gateway_records,
                 pkg.bank_records,
@@ -140,79 +187,69 @@ async def execute_run(req: RunRequest):
                 settlement_delay_threshold_hours=req.settlement_delay_threshold_hours
             )
             engine_metrics["engine_mode"] = "LOCAL_FALLBACK"
-            engine_metrics["notice"] = f"Exasol container at localhost:8563 is offline ({type(e).__name__}). Automatically executed on Local Deterministic Engine."
-    else:
-        local_engine = LocalFallbackReconciler()
-        await emit_event("STATUS_TRANSITION", {"stage": "RECONCILIATION_RUNNING", "message": "Executing deterministic SQL on local fallback engine..."})
-        results, engine_metrics = local_engine.reconcile(
-            pkg.gateway_records,
-            pkg.bank_records,
-            pkg.ground_truth,
-            settlement_delay_threshold_hours=req.settlement_delay_threshold_hours
+
+        global_audit_store.record_event(
+            run_id, req.scenario_id, "RECONCILIATION_COMPLETED", "SUCCESS", engine_metrics["engine"],
+            {"results_count": len(results), "timings_ms": engine_metrics["timings_ms"]}
         )
+        await emit_event("STATUS_TRANSITION", {
+            "stage": "RECONCILIATION_COMPLETED",
+            "message": f"Reconciliation executed in {engine_metrics['timings_ms']['total_time_ms']}ms using {engine_metrics['engine']}",
+            "metrics": engine_metrics
+        })
 
-    global_audit_store.record_event(
-        run_id, req.scenario_id, "RECONCILIATION_COMPLETED", "SUCCESS", engine_metrics["engine"],
-        {"results_count": len(results), "timings_ms": engine_metrics["timings_ms"]}
-    )
-    await emit_event("STATUS_TRANSITION", {
-        "stage": "RECONCILIATION_COMPLETED",
-        "message": f"Reconciliation executed in {engine_metrics['timings_ms']['total_time_ms']}ms using {engine_metrics['engine']}",
-        "metrics": engine_metrics
-    })
+        # Step 3: Run Simulation Perspectives
+        await emit_event("STATUS_TRANSITION", {"stage": "AGENT_SIMULATION_RUNNING", "message": "Simulating participant perspectives (Customer, Merchant, Gateway)..."})
+        miro_connector = MiroFishConnector()
+        sim_events: List[SimulationEvent] = []
+        gw_map = {r.transaction_id: r for r in pkg.gateway_records}
+        bk_map = {r.transaction_id: r for r in pkg.bank_records}
+        gt_map = {g.transaction_id: g for g in pkg.ground_truth}
 
-    # Step 3: Run MiroFish Simulation
-    await emit_event("STATUS_TRANSITION", {"stage": "AGENT_SIMULATION_RUNNING", "message": "Simulating participant perspectives (Customer, Merchant, Gateway)..."})
-    miro_connector = MiroFishConnector()
-    sim_events: List[SimulationEvent] = []
-    gw_map = {r.transaction_id: r for r in pkg.gateway_records}
-    bk_map = {r.transaction_id: r for r in pkg.bank_records}
-    gt_map = {g.transaction_id: g for g in pkg.ground_truth}
+        for res in results:
+            evs, _ = miro_connector.run_simulation_for_case(
+                result=res,
+                ground_truth=gt_map.get(res.transaction_id),
+                gw_record=gw_map.get(res.transaction_id),
+                bk_record=bk_map.get(res.transaction_id),
+                mode=req.simulation_mode
+            )
+            sim_events.extend(evs)
 
-    for res in results:
-        evs, _ = miro_connector.run_simulation_for_case(
-            result=res,
-            ground_truth=gt_map.get(res.transaction_id),
-            gw_record=gw_map.get(res.transaction_id),
-            bk_record=bk_map.get(res.transaction_id),
-            mode=req.simulation_mode
+        global_audit_store.record_event(
+            run_id, req.scenario_id, "SIMULATION_COMPLETED", "SUCCESS", "SIMULATION_CONNECTOR",
+            {"events_count": len(sim_events)}
         )
-        sim_events.extend(evs)
+        await emit_event("STATUS_TRANSITION", {
+            "stage": "RESULTS_AVAILABLE",
+            "message": "Reconciliation run and simulation completed successfully."
+        })
 
-    global_audit_store.record_event(
-        run_id, req.scenario_id, "SIMULATION_COMPLETED", "SUCCESS", "MIROFISH_CONNECTOR",
-        {"events_count": len(sim_events)}
-    )
-    await emit_event("STATUS_TRANSITION", {
-        "stage": "RESULTS_AVAILABLE",
-        "message": "Reconciliation run and simulation completed successfully."
-    })
+        # Cache run in memory
+        run_data = {
+            "run_id": run_id,
+            "scenario_id": req.scenario_id,
+            "seed": req.seed,
+            "dataset_package": pkg,
+            "engine_metrics": engine_metrics,
+            "results": results,
+            "simulation_events": sim_events,
+            "created_at_utc": datetime.now(timezone.utc).isoformat()
+        }
+        runs_cache[run_id] = run_data
 
-    # Cache run in memory
-    run_data = {
-        "run_id": run_id,
-        "scenario_id": req.scenario_id,
-        "seed": req.seed,
-        "dataset_package": pkg,
-        "engine_metrics": engine_metrics,
-        "results": results,
-        "simulation_events": sim_events,
-        "created_at_utc": datetime.now(timezone.utc).isoformat()
-    }
-    runs_cache[run_id] = run_data
-
-    # Return summary
-    summary_report = generate_run_summary_json(
-        run_id=run_id,
-        scenario_id=req.scenario_id,
-        seed=req.seed,
-        dataset_hash=pkg.dataset_hash,
-        engine_metrics=engine_metrics,
-        results=results,
-        simulation_events=sim_events,
-        audit_events=[e.model_dump() for e in global_audit_store.get_run_events(run_id)]
-    )
-    return summary_report
+        # Return summary
+        summary_report = generate_run_summary_json(
+            run_id=run_id,
+            scenario_id=req.scenario_id,
+            seed=req.seed,
+            dataset_hash=pkg.dataset_hash,
+            engine_metrics=engine_metrics,
+            results=results,
+            simulation_events=sim_events,
+            audit_events=[e.model_dump() for e in global_audit_store.get_run_events(run_id)]
+        )
+        return summary_report
 
 
 @app.get("/api/results/{run_id}")
@@ -306,17 +343,22 @@ def export_json(run_id: str):
 
 @app.get("/api/events")
 async def sse_events():
-    """Server-Sent Events endpoint for real-time live run updates."""
-    q: asyncio.Queue = asyncio.Queue()
+    """Server-Sent Events endpoint for real-time live run updates with bounded queue."""
+    q: asyncio.Queue = asyncio.Queue(maxsize=100)
     active_subscribers.append(q)
 
     async def event_generator():
+        # Immediate connection acknowledgment
+        yield f"data: {json.dumps({'event_type': 'CONNECTED', 'timestamp_utc': datetime.now(timezone.utc).isoformat()})}\n\n"
         try:
             while True:
                 msg = await q.get()
                 yield f"data: {json.dumps(msg)}\n\n"
         except asyncio.CancelledError:
-            active_subscribers.remove(q)
+            pass
+        finally:
+            if q in active_subscribers:
+                active_subscribers.remove(q)
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 

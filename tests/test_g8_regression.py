@@ -10,14 +10,19 @@ from exasettle.engine.fallback_reconciler import LocalFallbackReconciler
 
 
 def test_no_secrets_in_repo_or_tracked_files():
-    """Verify no live secrets, credentials or private .env files are in the repository."""
+    """Verify no live secrets, credentials or private .env files are tracked in source control."""
+    import subprocess
     repo_root = Path(__file__).resolve().parent.parent
 
-    # .env must not exist or must not be committed
-    assert not (repo_root / ".env").exists(), ".env file must not be committed to source control"
+    # .env must NOT be tracked in Git (Rule 6: private local .env must be excluded from Git)
+    res = subprocess.run(["git", "ls-files", ".env"], cwd=repo_root, capture_output=True, text=True)
+    assert res.stdout.strip() == "", ".env file must not be committed or tracked in git"
+
+    gitignore_text = (repo_root / ".gitignore").read_text(encoding="utf-8")
+    assert ".env" in gitignore_text, ".gitignore must exclude .env"
 
     # Scan python source files for leaked hardcoded API keys
-    key_pattern = re.compile(r"(sk-[a-zA-Z0-9]{20,}|zep_[a-zA-Z0-9]{20,})")
+    key_pattern = re.compile(r"(sk-[a-zA-Z0-9]{20,}|zep_[a-zA-Z0-9]{20,}|AIza[a-zA-Z0-9_\-]{20,}|AQ\.[a-zA-Z0-9_\-]{20,})")
     scanned_files = 0
 
     for py_file in repo_root.glob("exasettle/**/*.py"):

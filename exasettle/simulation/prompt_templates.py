@@ -25,7 +25,6 @@ Gateway record: {gateway_record_summary}
 Bank settlement record: {bank_record_summary_or_missing}
 Deterministic reconciliation classification: {reconciliation_classification}
 Evidence explanation: {evidence_summary}
-Known-answer expected result (demo validation only): {ground_truth_label}
 
 ASSIGNED ROLE TO SIMULATE: {assigned_role}
 
@@ -34,7 +33,7 @@ Role-play the assigned fictional perspective only. Explain what that role might 
 
 RULES
 - Use only the scenario fields above. Do not invent a real payment, actual money, or legal claims.
-- Do not change the deterministic classification or ground truth.
+- Do not change the deterministic classification.
 - If the evidence does not establish whether money was actually deducted, say that clearly.
 - Do not imitate a real person or create personal sensitive attributes.
 - Keep each response concise and specific to the scenario. Distinguish observed data from speculation.
@@ -74,7 +73,6 @@ def format_mirofish_prompt(
         bk_summary = "[MISSING - No bank settlement record found]"
 
     evidence_summary = result.applied_rule + " " + result.priority_explanation
-    gt_label = ground_truth.expected_classification.value if ground_truth else "N/A"
 
     return PROMPT_TEMPLATE.format(
         scenario_id=result.scenario_id,
@@ -86,6 +84,5 @@ def format_mirofish_prompt(
         bank_record_summary_or_missing=bk_summary,
         reconciliation_classification=result.classification.value,
         evidence_summary=evidence_summary,
-        ground_truth_label=gt_label,
         assigned_role=assigned_role
     )

@@ -58,10 +58,10 @@ python -m exasettle.cli run --seed 42
 Start the dashboard server:
 
 ```bash
-python -m exasettle.cli server --host 0.0.0.0 --port 8000
+python -m exasettle.cli server --host 127.0.0.1 --port 8000
 ```
 
-1. Open your web browser to **[http://localhost:8000](http://localhost:8000)**.
+1. Open your web browser to **[http://127.0.0.1:8000](http://127.0.0.1:8000)**.
 2. Note the persistent top disclosure banner: **`AI-simulated scenario — not real customer feedback`**.
 3. Click **"Check Health"** to view real-time latency and status of all dependencies.
 4. Click **"▶️ Start Reconciliation Run"**:
@@ -70,9 +70,9 @@ python -m exasettle.cli server --host 0.0.0.0 --port 8000
 5. Click **"Evidence"** on any transaction (e.g. `TXN_SYN_103`):
    - Inspect the deep evidence drawer showing side-by-side Gateway and Bank records.
    - Review the applied SQL rule and the mathematical factor breakdown of the operational triage score.
-6. Scroll down to the **MiroFish Swarm Simulation Panel**:
+6. Scroll down to the **Multi-Perspective Simulation Panel**:
    - View separate feedback cards for Customer, Merchant, and Gateway actors.
-   - Observe how agent feedback is kept distinct from financial records.
+   - Observe how agent feedback is kept strictly distinct from financial records.
 7. Click **"Download CSV"** and **"Download JSON Report"** to inspect export artifacts containing tamper-evident SHA-256 hashes.
 
 ---
@@ -86,7 +86,7 @@ pytest -v -rs
 ```
 
 **Verification Results**:
-- 30 Passed tests.
+- 37 Passed tests.
 - 1 Honest Skip (`test_exasol_personal_integration_or_explicit_skip`) explaining that Exasol Personal is offline without faking mocks as a pass.
 - Zero failures. Zero secret leaks.
 

@@ -55,7 +55,7 @@ class Settings:
 
     @property
     def APP_HOST(self) -> str:
-        return os.environ.get("APP_HOST", "0.0.0.0")
+        return os.environ.get("APP_HOST", "127.0.0.1")
 
     @property
     def APP_PORT(self) -> int:
@@ -175,8 +175,8 @@ def check_exasol() -> ServiceHealth:
         )
 
 
-def check_model_api() -> ServiceHealth:
-    """Check LLM provider configuration for MiroFish."""
+def check_model_api(test_connectivity: bool = False) -> ServiceHealth:
+    """Check LLM provider configuration and functional readiness."""
     now = datetime.now(timezone.utc).isoformat()
     if not Settings.LLM_API_KEY:
         return ServiceHealth(
@@ -185,7 +185,7 @@ def check_model_api() -> ServiceHealth:
             details="LLM_API_KEY is not configured.",
             setup_instructions=(
                 "To enable live multi-agent simulation:\n"
-                "1. Provide LLM_API_KEY in .env (OpenAI or DashScope/Qwen compatible endpoint)\n"
+                "1. Provide LLM_API_KEY in .env (OpenAI or Google AI Studio Gemini endpoint)\n"
                 "2. Optionally set LLM_BASE_URL and LLM_MODEL_NAME."
             ),
             last_checked_utc=now
@@ -194,6 +194,27 @@ def check_model_api() -> ServiceHealth:
     endpoint = Settings.get_llm_base_url()
     model = Settings.get_llm_model_name()
     provider = "Google AI Studio Gemini" if "generativelanguage.googleapis.com" in endpoint else "OpenAI Compatible"
+
+    if test_connectivity:
+        try:
+            from openai import OpenAI
+            client = OpenAI(api_key=Settings.LLM_API_KEY, base_url=endpoint, timeout=2.0)
+            client.models.list()
+            return ServiceHealth(
+                service_name="LLM Model Provider API",
+                status="FUNCTIONAL",
+                version_or_info=f"{provider} ({model})",
+                details=f"LLM API verified functional ({mask_secret(Settings.LLM_API_KEY)}), Endpoint: {endpoint}",
+                last_checked_utc=now
+            )
+        except Exception as e:
+            return ServiceHealth(
+                service_name="LLM Model Provider API",
+                status="REACHABLE" if "401" in str(e) or "authentication" in str(e).lower() else "CONFIGURED",
+                version_or_info=f"{provider} ({model})",
+                details=f"Configured but live ping failed: {type(e).__name__} ({mask_secret(Settings.LLM_API_KEY)})",
+                last_checked_utc=now
+            )
 
     return ServiceHealth(
         service_name="LLM Model Provider API",

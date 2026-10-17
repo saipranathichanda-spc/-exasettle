@@ -70,6 +70,11 @@ class ReconciliationResult(BaseModel):
     ambiguity_flag: bool = False
     gateway_record_id: Optional[str] = None
     bank_record_id: Optional[str] = None
+    gateway_rows_count: int = 1
+    bank_rows_count: int = 1
+    gateway_record_ids: List[str] = []
+    bank_record_ids: List[str] = []
+    source_row_anomalies: List[str] = []
     gateway_amount_paise: Optional[int] = None
     bank_amount_paise: Optional[int] = None
     difference_paise: int = 0
